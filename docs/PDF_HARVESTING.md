@@ -1,6 +1,6 @@
 # Full-text PDF harvesting
 
-**English** · [中文](PDF_HARVESTING.zh-CN.md)
+**English** · [中文](PDF_HARVESTING_zh.md)
 
 SeismoHub can fetch full-text PDFs for the papers in your library, or for any reading list, from open channels and
 (optionally) through your institution's publisher text-and-data-mining (TDM) APIs. Every PDF is verified and

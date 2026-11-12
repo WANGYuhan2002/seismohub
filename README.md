@@ -1,11 +1,13 @@
 # SeismoHub
 
-**English** · [中文](README.zh-CN.md)
+**English** · [中文](README_zh.md)
 
 A self-hosted, local-first literature hub for seismology. SeismoHub tracks new papers on the topics, authors and
 journals you follow, reads them with Google Gemini, and keeps every AI statement linked to the page and paragraph
 it came from. It runs on your own machine as one FastAPI process with a SQLite database. There is no account, no
 telemetry and no cloud sync; your library is a file you own.
+
+![SeismoHub: pick a tracker, open a paper, read the AI analysis next to the PDF](docs/images/demo.gif)
 
 > SeismoHub is single-user software and has **no login**. Run it on `127.0.0.1` (the default) or behind a reverse
 > proxy that handles authentication. See [Security](#security-and-licensed-content).
@@ -20,6 +22,8 @@ telemetry and no cloud sync; your library is a file you own.
 - 11 preset seismology trackers on first start: DAS / fibre-optic sensing, full-waveform inversion, ambient noise,
   earthquake source physics, ML in seismology, catalogs and detection, environmental seismology and more.
 - Semantic matching with Gemini embeddings, plus an Inbox that shows what is new since your last visit.
+- Not a seismologist? The field-specific parts are a few data files and prompts; see
+  [docs/ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md).
 
 **Reading with AI**
 - Bilingual (English / Chinese) structured analysis of each paper from its full PDF.
@@ -38,6 +42,25 @@ telemetry and no cloud sync; your library is a file you own.
 - Every PDF is checked before it is accepted (real PDF, at least 3 pages, title or DOI on the first pages) and
   labelled with a licence tier. TDM-licensed copies stay on your disk and are never sent to hosted AI.
   See [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
+
+---
+
+## Screenshots
+
+**Trackers and the paper stream.** The 11 preset trackers, each with its own rules and monthly folders.
+
+![Trackers and paper stream](docs/images/library.png)
+
+**AI analysis next to the PDF.** Topics, keywords and a one-sentence takeaway, with the paper open alongside.
+
+![AI analysis and PDF reader](docs/images/paper-detail.png)
+
+**Structured analysis with page references.** Method, data, results, limitations and novelty, each pointing to
+the section and page it came from.
+
+![Structured analysis](docs/images/analysis.png)
+
+The screenshots show a demo library of open-access papers (arXiv, EarthArXiv, CC BY journal articles).
 
 ---
 
@@ -171,6 +194,15 @@ DISABLE_TRACKER_SCHEDULER=1 DISABLE_EAGER_ANALYSIS=1 SEISMO_NO_AUTOFETCH=1 pytho
 ```
 
 The tests run offline against an in-memory database and need no API keys. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Documentation
+
+| Guide | English | 中文 |
+|---|---|---|
+| Deployment, backups, troubleshooting | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | [DEPLOYMENT_zh.md](docs/DEPLOYMENT_zh.md) |
+| Full-text PDF harvesting | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) |
+| Adapting SeismoHub to another field | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) |
+| Agent skill for PDF harvesting | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
 
 ## License
 

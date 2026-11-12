@@ -13,7 +13,7 @@ description: >-
 # SeismoHub PDF harvesting / PDF 抓取
 
 Work from the repository root with the project's Python environment active. The full user guide is
-`docs/PDF_HARVESTING.md` (Chinese: `docs/PDF_HARVESTING.zh-CN.md`).
+`docs/PDF_HARVESTING.md` (Chinese: `docs/PDF_HARVESTING_zh.md`).
 
 ## Ground rules (non-negotiable)
 

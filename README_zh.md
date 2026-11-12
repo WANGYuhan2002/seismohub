@@ -6,6 +6,8 @@
 Gemini 精读，并让每一条 AI 结论都能链接回原文的页码和段落。它在你自己的电脑上以一个 FastAPI 进程加一个 SQLite
 数据库运行：没有账号，没有遥测，没有云同步，文献库就是你自己的一个文件。
 
+![SeismoHub：选一个追踪器，打开论文，对照 PDF 阅读 AI 分析](docs/images/demo.gif)
+
 > SeismoHub 是单用户软件，**没有登录功能**。请让它只监听 `127.0.0.1`（默认就是这样），或放在带认证的反向代理后面。
 > 详见[安全与受许可内容](#安全与受许可内容)。
 
@@ -19,6 +21,8 @@ Gemini 精读，并让每一条 AI 结论都能链接回原文的页码和段落
 - 首次启动自带 11 个地震学预置追踪器：DAS / 光纤传感、全波形反演、背景噪声、震源物理、地震学机器学习、
   地震目录与检测、环境地震学等。
 - 用 Gemini 向量做语义匹配；收件箱会标出上次访问以来的新论文。
+- 不是做地震学的？学科相关的部分只是几个数据文件和提示词，见
+  [docs/ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md)。
 
 **AI 精读**
 - 基于整篇 PDF 生成中英双语的结构化分析。
@@ -35,7 +39,25 @@ Gemini 精读，并让每一条 AI 结论都能链接回原文的页码和段落
   Nature 开放获取、机构仓储。
 - 可选使用你所在机构的 Elsevier 和 Wiley 文本与数据挖掘（TDM）密钥。
 - 每个 PDF 入库前都要过校验（确实是 PDF、至少 3 页、前几页能找到标题或 DOI），并标注许可层级。
-  TDM 许可的副本只留在你的硬盘上，不会发送给云端 AI。详见 [docs/PDF_HARVESTING.zh-CN.md](docs/PDF_HARVESTING.zh-CN.md)。
+  TDM 许可的副本只留在你的硬盘上，不会发送给云端 AI。详见 [docs/PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md)。
+
+---
+
+## 截图
+
+**追踪器与论文流。** 11 个预置追踪器，各有自己的规则和按月归档的文件夹。
+
+![追踪器与论文流](docs/images/library.png)
+
+**AI 分析与 PDF 并排。** 主题、关键词和一句话要点，旁边就是论文原文。
+
+![AI 分析与 PDF 阅读器](docs/images/paper-detail.png)
+
+**带页码出处的结构化分析。** 方法、数据、结果、局限和创新点，每一条都标明来自哪一节、哪一页。
+
+![结构化分析](docs/images/analysis.png)
+
+截图使用的是一个由开放获取论文（arXiv、EarthArXiv、CC BY 期刊文章）组成的演示库。
 
 ---
 
@@ -71,7 +93,7 @@ docker compose up -d --build
 ```
 
 然后访问 <http://localhost:8000>。端口只发布在宿主机的 `127.0.0.1` 上。数据库、PDF 和全文包都保存在宿主机的
-`./data`、`./downloads` 和 `./paper_bundles`。远程服务器、备份等更多部署方式见 [docs/DEPLOYMENT.zh-CN.md](docs/DEPLOYMENT.zh-CN.md)。
+`./data`、`./downloads` 和 `./paper_bundles`。远程服务器、备份等更多部署方式见 [docs/DEPLOYMENT_zh.md](docs/DEPLOYMENT_zh.md)。
 
 ---
 
@@ -107,7 +129,7 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 - 出版商不允许脚本下载的论文会写进一份清单。用浏览器下载它们，再用应用里的 **Upload missing PDFs（上传缺失的 PDF）**。
 - 抓取从不触发 AI 分析。`scripts/reanalyze_stale_pdf.py` 会重做那些"写于 PDF 挂上之前"的分析；不加 `--run` 时只预览并估算费用。
 
-渠道、密钥、许可层级和运行报告的说明见 [docs/PDF_HARVESTING.zh-CN.md](docs/PDF_HARVESTING.zh-CN.md)。
+渠道、密钥、许可层级和运行报告的说明见 [docs/PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md)。
 
 ### Agent 技能
 
@@ -158,6 +180,15 @@ DISABLE_TRACKER_SCHEDULER=1 DISABLE_EAGER_ANALYSIS=1 SEISMO_NO_AUTOFETCH=1 pytho
 ```
 
 测试离线运行，使用内存数据库，不需要任何 API 密钥。参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 文档
+
+| 指南 | 中文 | English |
+|---|---|---|
+| 部署、备份、常见问题 | [DEPLOYMENT_zh.md](docs/DEPLOYMENT_zh.md) | [DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| 全文 PDF 抓取 | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) |
+| 把 SeismoHub 迁移到其他学科 | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) |
+| PDF 抓取的 Agent 技能 | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
 
 ## 许可证
 

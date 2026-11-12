@@ -1,6 +1,6 @@
 # Deploying SeismoHub
 
-**English** · [中文](DEPLOYMENT.zh-CN.md)
+**English** · [中文](DEPLOYMENT_zh.md)
 
 SeismoHub is a single-user web app: one Python process, one SQLite file, and folders of PDFs. Pick the setup that
 matches where you want to read.

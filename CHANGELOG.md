@@ -13,6 +13,7 @@
 - Docker image runs as a non-root user; Compose publishes on `127.0.0.1` only.
 - `.env.example` turns off proactive background analysis by default (`DISABLE_EAGER_ANALYSIS=1`).
 - The retired browser-based crawler is not included.
+- Docs: README screenshots and demo GIF; a guide for adapting SeismoHub to other fields.
 
 - 核心应用：FastAPI + SQLite + 单页界面；带 11 个地震学预置的追踪器；带段落锚点引用的 Gemini 分析；单篇问答；
   导入（标识符、上传、监视文件夹、Zotero）与导出（BibTeX、RIS、CSL-JSON、PDF 压缩包、Obsidian 笔记库）。
@@ -23,3 +24,4 @@
 - Docker 镜像以非 root 用户运行；Compose 只发布在 `127.0.0.1`。
 - `.env.example` 默认关闭后台主动分析（`DISABLE_EAGER_ANALYSIS=1`）。
 - 已退役的浏览器爬虫不包含在内。
+- 文档：README 截图和演示 GIF；把 SeismoHub 迁移到其他学科的指南。
