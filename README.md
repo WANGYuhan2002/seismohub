@@ -3,47 +3,147 @@
 **English** · [中文](README_zh.md)
 
 A self-hosted, local-first literature hub for seismology. SeismoHub tracks new papers on the topics, authors and
-journals you follow, reads them with Google Gemini, and keeps every AI statement linked to the page and paragraph
-it came from. It runs on your own machine as one FastAPI process with a SQLite database. There is no account, no
-telemetry and no cloud sync; your library is a file you own.
+journals you follow, keeps only the ones that are really about seismology, reads them with Google Gemini, and links
+every AI statement to the page and paragraph it came from. It runs on your own machine as one FastAPI process with a
+SQLite database. There is no account, no telemetry and no cloud sync; your library is a file you own.
 
 ![SeismoHub: pick a tracker, open a paper, read the AI analysis next to the PDF](docs/images/demo.gif)
 
-> SeismoHub is single-user software and has **no login**. Run it on `127.0.0.1` (the default) or behind a reverse
-> proxy that handles authentication. See [Security](#security-and-licensed-content).
+---
+
+## How it works
+
+SeismoHub is a pipeline in four stages around one SQLite library. The cheap steps (fetching, merging duplicates,
+filtering, embeddings) run on every paper. The expensive one, reading a paper with Gemini, runs when you open that
+paper, or in the background for every new paper if you switch that on.
+
+```mermaid
+flowchart TB
+    subgraph SRC["① Where papers come from"]
+        direction LR
+        J["Journals<br/>Crossref · OpenAlex · RSS"]
+        PP["Preprint servers<br/>EarthArXiv · ESSOAr"]
+        FO["Followed sources<br/>authors · arXiv categories<br/>(skip the gates)"]
+        J ~~~ PP ~~~ FO
+    end
+    subgraph KEEP["② What is kept"]
+        direction LR
+        DD["Merge duplicates<br/>DOI › title › link"] --> KG["Keyword gate<br/>1 core or 2 weaker terms"] --> LG["LLM gate<br/>Gemini Flash: is it seismology?"]
+    end
+    ME["Your own additions<br/>DOI · PDF · watch folder · Zotero"]
+    DB[("Library<br/>SQLite + embeddings")]
+    subgraph CLS["③ How papers are classified"]
+        direction LR
+        AI["AI analysis · Gemini<br/>reads the PDF or the abstract<br/>topics · relevance<br/>claims with page anchors"]
+        TR["Tracker rules<br/>keyword · journal · author<br/>topic · semantic → monthly folders"]
+        AI -->|topics| TR
+    end
+    subgraph OUT["④ How it is presented"]
+        direction LR
+        APP["Web app<br/>trackers · PDF + analysis<br/>chat with citations"]
+        EXP["Exports<br/>BibTeX · RIS · Obsidian"]
+        LITE["SeismoHub Lite<br/>public read-only site"]
+        APP ~~~ EXP ~~~ LITE
+    end
+    subgraph FT["Full text · harvest_pdfs.py"]
+        direction LR
+        HV["Open channels<br/>+ your TDM keys"] --> CK{"4 checks<br/>licence tier"}
+        CK -->|open| ATT["Attached<br/>AI may read it"]
+        CK -->|licensed| BND["paper_bundles/<br/>stays local"]
+    end
+    SRC --> KEEP --> DB
+    ME --> DB
+    DB --> CLS --> OUT
+    DB -.-> FT
+    FT -.->|full text| CLS
+```
+
+**① Where papers come from.** Every six hours the server collects the papers of the past 30 days from the journals in
+its registry (Crossref and OpenAlex queried by ISSN, plus the publishers' RSS feeds) and from the EarthArXiv and
+ESSOAr preprint servers. Trackers add sources of their own: the authors and arXiv categories they follow are fetched
+too. You can also add papers by hand: paste a DOI, arXiv ID or URL, upload PDFs, drop files into a watch folder, or
+import from Zotero.
+
+**② What is kept.** Records of the same paper from different sources are merged, matched by DOI, then by title,
+then by link; a weaker source never overwrites a field that a stronger one has filled. Two gates then keep the library
+on topic:
+
+- the **keyword gate** admits a paper whose title and abstract contain one unambiguous seismology term (*earthquake*,
+  *seismogram*, *receiver function* ...) or two weaker ones (*fault*, *tomography*, *mantle* ...), and turns away
+  look-alikes from medicine and engineering;
+- the **LLM gate** asks Gemini Flash, in one cheap call per batch, whether each paper's main subject is seismology.
+  It can only remove papers, and on any error it keeps them.
+
+Papers from sources you follow explicitly, and papers you add yourself, skip both gates. Every kept paper gets an
+embedding of its title and abstract for semantic matching.
+
+**③ How papers are classified.** Two mechanisms work together:
+
+- **Tracker rules.** A tracker is a set of rules combined with *any* or *all*: keywords, journals, authors,
+  institutions, AI topics, semantic similarity to a short description, or a date window. A scheduler re-checks every
+  tracker on its own cadence (daily, weekly or monthly) and files matches into monthly folders, or into
+  institution / author folders for author trackers. Eleven seismology presets come built in.
+- **AI analysis.** Gemini reads the PDF when one is attached, otherwise the abstract plus web metadata. It returns up
+  to three primary topics from a fixed taxonomy of 19 seismology topics (with an *off-topic* label for anything
+  else), facets for method, data type, target and paper type, a relevance score, a one-sentence takeaway, a bilingual
+  summary, and structured claims (method, data, results, limitations, novelty), each anchored to the section, page and
+  paragraph it came from. The topics feed back into the tracker rules.
+
+**④ How it is presented.** The web app shows your trackers with unread counts, a paper stream with filters and
+sorting, and a detail view with the PDF beside the analysis. A chat for each paper answers questions with citations;
+clicking one scrolls the PDF to the cited paragraph. The library exports to BibTeX, RIS and CSL-JSON, mirrors to an
+Obsidian vault, and can be published read-only as SeismoHub Lite (next section).
+
+**Full text, within the licence.** `scripts/harvest_pdfs.py`, or the bundled agent skill, fetches full texts through
+open channels and, if you have them, your institution's text-and-data-mining (TDM) keys. A PDF is accepted only if it
+is a real PDF of a sane size, has at least three pages of text, and shows the paper's title or DOI on its first
+pages. Its licence tier comes from the copy actually downloaded: open copies are attached to the paper and may be
+read by the AI; licensed copies stay in `paper_bundles/` and never reach a hosted AI.
+
+## SeismoHub and SeismoHub Lite
+
+This repository is the heavy side: on your own machine it fetches, filters, analyses and stores everything, including
+PDFs, your notes and your chats. [SeismoHub Lite](https://wangyuhan2002.github.io/seismohub-lite/) is a light,
+public window onto one such library: a single static page on GitHub Pages with the paper list, abstracts and AI notes,
+updated once a day. Its exporter and checks live in the
+[seismohub-lite repository](https://github.com/WANGYuhan2002/seismohub-lite).
+
+```mermaid
+flowchart LR
+    H[("SeismoHub library<br/>(this app)")] -->|"read-only<br/>whitelisted columns"| X["export_lite.py"]
+    X --> JS["Static JSON<br/>list · abstracts · analyses"]
+    JS --> G{"Daily checks<br/>page test<br/>privacy scan"}
+    G -->|all pass| P["GitHub Pages<br/>SeismoHub Lite"]
+    G -->|any fails| S["Skip this update"]
+```
+
+How Lite is cut out of the heavy library:
+
+- The exporter opens the database **read-only** and reads only whitelisted columns of the papers and their AI
+  analyses.
+- It leaves out PDFs and their paths, embeddings, reading state, notes, projects, the chat, verbatim figure captions,
+  and papers classified as off-topic.
+- Only analyses made from abstracts and metadata are published, never ones made from a PDF, so no full text is
+  republished.
+- The output is static JSON (the list, the abstracts, and per-paper analyses in shards) plus one HTML file. Search and
+  filters run in the reader's browser; the site has no server, no AI and no API key.
+- A daily job publishes only when every check passes: a new successful fetch, an unchanged data layout, limits on
+  size and string length (so full text cannot slip in), a headless-browser test of the page, and a privacy scan that
+  compares the files against the real key values. If any check fails, that day is skipped.
 
 ---
 
 ## Features
 
-**Tracking**
-- Trackers by topic, author, journal or institution, refreshed daily, weekly or monthly from OpenAlex, Crossref,
-  arXiv and journal RSS feeds (optionally ETH Zurich Research Collection).
-- 11 preset seismology trackers on first start: DAS / fibre-optic sensing, full-waveform inversion, ambient noise,
-  earthquake source physics, ML in seismology, catalogs and detection, environmental seismology and more.
-- Semantic matching with Gemini embeddings, plus an Inbox that shows what is new since your last visit.
-- Not a seismologist? The field-specific parts are a few data files and prompts; see
+- **Tracking:** trackers by topic, author, journal or institution with daily / weekly / monthly cadence; 11
+  seismology presets; semantic matching; unread counts and an inbox of what is new since your last visit.
+- **Reading:** bilingual AI analysis with page-anchored claims; the PDF beside the analysis; a chat per paper with
+  clickable citations, Markdown and LaTeX.
+- **In and out:** add papers from a DOI, arXiv ID, PMID / PMC ID, URL or free text; single or bulk PDF upload matched
+  by DOI and title; watch folders; Zotero import; export to BibTeX, RIS, CSL-JSON, a PDF zip and an Obsidian vault.
+- **Full text:** a licence-aware harvester with an agent skill; see [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
+- **Other fields:** the seismology lives in a few data files and prompts; see
   [docs/ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md).
-
-**Reading with AI**
-- Bilingual (English / Chinese) structured analysis of each paper from its full PDF.
-- Citation anchors: every AI claim carries page, paragraph and quote, and clicking it opens that paragraph.
-- Per-paper Q&A chat with saved history, Markdown and LaTeX rendering.
-
-**Getting papers in and out**
-- Add a paper from a DOI, arXiv ID, PMID / PMC ID, URL or free text.
-- Upload PDFs (single or bulk). They are matched to library entries by DOI and title.
-- Watch folders, Zotero import, and export to BibTeX, RIS, CSL-JSON, PDF zip and an Obsidian vault.
-
-**Full-text harvesting** (command line + agent skill)
-- Fetches verified full-text PDFs from open channels: OpenAlex, arXiv, EarthArXiv, Copernicus / EGU, Zenodo,
-  PMC, Nature open access, institutional repositories.
-- Optionally uses your institution's Elsevier and Wiley text-and-data-mining (TDM) keys.
-- Every PDF is checked before it is accepted (real PDF, at least 3 pages, title or DOI on the first pages) and
-  labelled with a licence tier. TDM-licensed copies stay on your disk and are never sent to hosted AI.
-  See [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
-
----
 
 ## Screenshots
 
@@ -55,8 +155,8 @@ telemetry and no cloud sync; your library is a file you own.
 
 ![AI analysis and PDF reader](docs/images/paper-detail.png)
 
-**Structured analysis with page references.** Method, data, results, limitations and novelty, each pointing to
-the section and page it came from.
+**Structured analysis with page references.** Method, data, results, limitations and novelty, each pointing to the
+section and page it came from.
 
 ![Structured analysis](docs/images/analysis.png)
 
@@ -64,7 +164,13 @@ The screenshots show a demo library of open-access papers (arXiv, EarthArXiv, CC
 
 ---
 
-## Quick start
+## Get started
+
+> SeismoHub is single-user software and has **no login**. Run it on `127.0.0.1` (the default) or behind a reverse
+> proxy that handles authentication. See [Security](#security-and-licensed-content).
+
+If you set things up with an AI coding agent, point it at this README and [`.env.example`](.env.example); the steps
+below are what it should run.
 
 Requirements: Python **3.11 or newer**, and a Google Vertex AI API key for the AI features.
 
@@ -95,9 +201,9 @@ mkdir -p data downloads paper_bundles
 docker compose up -d --build
 ```
 
-The app is then at <http://localhost:8000>, published on the host's `127.0.0.1` only. The database, PDFs and
-full-text bundles stay on the host in `./data`, `./downloads` and `./paper_bundles`. More options, including
-remote servers and backups, are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+The app is then at <http://localhost:8000>, published on the host's `127.0.0.1` only. The database, PDFs and full-text
+bundles stay on the host in `./data`, `./downloads` and `./paper_bundles`. More options, including remote servers and
+backups, are in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ---
 
@@ -107,17 +213,17 @@ All settings are environment variables, documented in [`.env.example`](.env.exam
 
 | Variable | Needed for | Where to get it |
 |---|---|---|
-| `VERTEX_AI_API_KEY` | AI analysis (required); Q&A and embeddings | Google Cloud console → Vertex AI → API keys |
+| `VERTEX_AI_API_KEY` | AI analysis (required); chat and embeddings | Google Cloud console → Vertex AI → API keys |
 | `VERTEX_AI_PROJECT` | Models that are routed through your project | Your Google Cloud project ID |
-| `GEMINI_API_KEY` | Fallback for Q&A and embeddings only | Google AI Studio |
+| `GEMINI_API_KEY` | Fallback for chat and embeddings only | Google AI Studio |
 | `PIPELINE_CONTACT_EMAIL` | Polite-pool access to OpenAlex / Crossref / Unpaywall | Your own e-mail address |
 | `GOOGLE_CUSTOM_SEARCH_API_KEY`, `GOOGLE_CSE_CX` | Optional web context in the AI analysis | Google Programmable Search |
 | `ETH_RC_API_KEY` | Optional ETH Research Collection source | ETH Library API portal |
 | `ELSEVIER_API_KEY`, `WILEY_TDM_TOKEN`, `OPENALEX_API_KEY` | Optional full-text harvesting channels | Publisher developer portals |
 
-**API cost.** The server can analyse every new paper in the background as soon as it arrives. `.env.example`
-turns this off (`DISABLE_EAGER_ANALYSIS=1`), so papers are analysed when you open them. Remove that line to
-analyse everything ahead of time.
+**API cost.** The server can analyse every new paper in the background as soon as it arrives. `.env.example` turns
+this off (`DISABLE_EAGER_ANALYSIS=1`), so papers are analysed when you open them. Remove that line to analyse
+everything ahead of time.
 
 ---
 
@@ -131,8 +237,8 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 
 - `harvest_pdfs.py` fills in missing PDFs for papers already in your library. It backs up the database before it
   writes anything.
-- `harvest_literature_list.py` fetches any list of DOIs, arXiv IDs or citations into a folder, without touching
-  the database.
+- `harvest_literature_list.py` fetches any list of DOIs, arXiv IDs or citations into a folder, without touching the
+  database.
 - Papers that publishers block for scripts are written to a checklist. Download those in your browser, then use
   **Upload missing PDFs** in the app.
 - Harvesting never starts an AI analysis. `scripts/reanalyze_stale_pdf.py` redoes the analyses that were written
@@ -144,45 +250,54 @@ Channels, keys, licence tiers and reports are described in [docs/PDF_HARVESTING.
 
 The repository ships a [Claude Code](https://claude.com/claude-code) skill at
 [`.claude/skills/seismohub-pdf-harvest/`](.claude/skills/seismohub-pdf-harvest/SKILL.md). Open the repository in
-Claude Code and ask, for example, *"fetch the missing PDFs for my GJI papers"* or *"download full texts for this
-DOI list"*. The skill runs a dry run first, applies the licence rules, and summarises the run report with
+Claude Code and ask, for example, *"fetch the missing PDFs for my GJI papers"* or *"download full texts for this DOI
+list"*. The skill runs a dry run first, applies the licence rules, and summarises the run report with
 `harvest_status.py`. Other coding agents can follow the same `SKILL.md`.
 
 ---
 
 ## Security and licensed content
 
-- **No authentication.** `python main.py` listens on `127.0.0.1`. For remote use, connect through an SSH tunnel
-  or a reverse proxy with authentication. Do not expose the port to the internet: anyone who can reach it can
-  read your library and change your API keys.
+- **No authentication.** `python main.py` listens on `127.0.0.1`. For remote use, connect through an SSH tunnel or a
+  reverse proxy with authentication. Do not expose the port to the internet: anyone who can reach it can read your
+  library and change your API keys.
 - **Keys** live in `.env` (git-ignored, mode 0600) or in `~/.config/seismo_harvester/keys.env` outside the
   repository. The Settings page only ever shows masked values.
-- **What is sent to Google.** The AI analysis uploads the attached PDF to Gemini. Q&A sends cached page text.
-  Embeddings send titles and abstracts. Nothing else leaves your machine except metadata queries to the
-  scholarly APIs listed above.
-- **Licensed full text stays local.** Copies obtained through institutional TDM licences, and PDFs that carry
-  "All rights reserved" or an institutional download stamp without an open licence, are kept in `paper_bundles/`,
-  never attached to the app and never sent to hosted AI. The Q&A chat refuses for such papers.
-- **Publisher terms.** The harvester sends an honest User-Agent, waits between requests to each host, and skips
-  sites that answer scripts with a bot challenge. It never solves CAPTCHAs or works around Cloudflare. Use TDM
-  keys only within the terms your institution signed.
+- **What is sent to Google.** The AI analysis uploads the attached PDF to Gemini. The chat sends cached page text.
+  Embeddings send titles and abstracts. Nothing else leaves your machine except metadata queries to the scholarly
+  APIs listed above.
+- **Licensed full text stays local.** Copies obtained through institutional TDM licences, and PDFs that carry "All
+  rights reserved" or an institutional download stamp without an open licence, are kept in `paper_bundles/`, never
+  attached to the app and never sent to hosted AI. The chat refuses for such papers.
+- **Publisher terms.** The harvester sends an honest User-Agent, waits between requests to each host, and skips sites
+  that answer scripts with a bot challenge. It never solves CAPTCHAs or works around Cloudflare. Use TDM keys only
+  within the terms your institution signed.
 
 Report security issues as described in [SECURITY.md](SECURITY.md).
 
 ---
+
+## Documentation
+
+| Guide | English | 中文 |
+|---|---|---|
+| Deployment, backups, troubleshooting | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | [DEPLOYMENT_zh.md](docs/DEPLOYMENT_zh.md) |
+| Full-text PDF harvesting | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) |
+| Adapting SeismoHub to another field | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) |
+| Agent skill for PDF harvesting | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
 
 ## Project layout
 
 ```
 main.py                 FastAPI app (85 routes) and background schedulers
 db.py, models.py        SQLite schema, idempotent migrations, SQLAlchemy 1.4 models
-services/               fetching, AI analysis, Q&A, embeddings, citation anchors, exports, Obsidian vault,
+services/               fetching, AI analysis, chat, embeddings, citation anchors, exports, Obsidian vault,
                         Zotero import, PDF matching, full-text harvester, licence guards
 templates/index.html    the whole web UI (vanilla JS + Tailwind)
 scripts/                harvesting and maintenance command-line tools
 seed_presets.json       the 11 preset trackers
 tests/                  pytest suite (offline; in-memory database)
-docs/                   deployment and harvesting guides (English and Chinese)
+docs/                   guides in English and Chinese, screenshots
 .claude/skills/         agent skill for PDF harvesting
 ```
 
@@ -195,16 +310,7 @@ DISABLE_TRACKER_SCHEDULER=1 DISABLE_EAGER_ANALYSIS=1 SEISMO_NO_AUTOFETCH=1 pytho
 
 The tests run offline against an in-memory database and need no API keys. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Documentation
-
-| Guide | English | 中文 |
-|---|---|---|
-| Deployment, backups, troubleshooting | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | [DEPLOYMENT_zh.md](docs/DEPLOYMENT_zh.md) |
-| Full-text PDF harvesting | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) |
-| Adapting SeismoHub to another field | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) |
-| Agent skill for PDF harvesting | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
-
 ## License
 
-[MIT](LICENSE). Paper metadata comes from OpenAlex (CC0), Crossref, arXiv and the publishers' own feeds. Full
-texts remain under their publishers' licences.
+[MIT](LICENSE). Paper metadata comes from OpenAlex (CC0), Crossref, arXiv and the publishers' own feeds. Full texts
+remain under their publishers' licences.
