@@ -19,7 +19,7 @@ SeismoHub 可以为文献库里的论文、或任意一份阅读清单抓取全�
 | `scripts/zotero_triage_import.py` | 导入你在浏览器或 Zotero 里下载的 PDF，并按许可分流 | 默认试运行；加 `--commit` 才写入 |
 | `scripts/match_zotero_export.py` | 把 Zotero "导出 → 文件" 的文件夹匹配到库里的论文 | 默认试运行；加 `--commit` 才写入 |
 | 应用 → **Upload missing PDFs（上传缺失的 PDF）** | 把 PDF 拖进文献库，按 DOI 和标题匹配 | 数据库、`downloads/` |
-| `scripts/reanalyze_stale_pdf.py` | 为"PDF 晚于标题/摘要分析才挂上"的论文补上 PDF 分析层 | 默认只预览并估算费用；加 `--run` 会先备份数据库，再调用 Gemini（付费） |
+| `scripts/reanalyze_stale_pdf.py` | 对"分析写于 PDF 挂上之前"的论文重新做 AI 分析 | 默认只预览并估算费用；加 `--run` 会先备份数据库，再调用 Gemini（付费） |
 | `.claude/skills/seismohub-pdf-harvest/scripts/harvest_status.py` | 汇总最近一次运行报告（只读） | 无 |
 
 所有命令都在仓库根目录、激活项目的 Python 环境后运行。
@@ -137,10 +137,9 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 
 抓取器从不覆盖已有的 PDF，从不把别的论文已占用的文件挂上去，也从不触发 AI 分析。
 
-### PDF 挂上之后再读全文
+### PDF 挂上之后重新分析
 
-论文的收录和分类只依据标题和摘要。PDF 分析是单独的展示层：它给论文详情补充带页码锚点的论点和图表说明，从不改变主题、
-相关度、关键词和追踪器归类。PDF 晚于标题/摘要分析才挂上的论文，详情页会注明"PDF 是在分析之后才挂上的"。要为它们补上 PDF 分析层：
+在 PDF 到达之前就分析过的论文，会保留基于摘要的分析；详情面板会注明"PDF 是在分析之后才挂上的"。要基于全文重做这些分析：
 
 ```bash
 python scripts/reanalyze_stale_pdf.py                         # 免费预览：哪些论文、多少页、估算费用

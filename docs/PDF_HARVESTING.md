@@ -21,7 +21,7 @@ The same workflow is packaged as an agent skill in
 | `scripts/zotero_triage_import.py` | Imports PDFs you downloaded in a browser or Zotero, sorted by licence | Dry run by default; `--commit` writes |
 | `scripts/match_zotero_export.py` | Matches a Zotero "Export → files" folder to library papers | Dry run by default; `--commit` writes |
 | App → **Upload missing PDFs** | Drag PDFs onto the library; matched by DOI and title | DB rows, `downloads/` |
-| `scripts/reanalyze_stale_pdf.py` | Adds the PDF analysis layer to papers whose PDF arrived after their title/abstract analysis | Preview and cost estimate by default; `--run` calls Gemini (paid) after a DB backup |
+| `scripts/reanalyze_stale_pdf.py` | Re-runs the AI analysis for papers whose analysis was written before their PDF arrived | Preview and cost estimate by default; `--run` calls Gemini (paid) after a DB backup |
 | `.claude/skills/seismohub-pdf-harvest/scripts/harvest_status.py` | Summarises the latest run report (read-only) | Nothing |
 
 Run everything from the repository root with the project's Python environment active.
@@ -142,12 +142,10 @@ Other flags: `--limit N`, `--paper-id ID`, `--no-extras` (skip XML, supplements,
 The harvester never overwrites an existing PDF, never attaches a file that another paper already owns, and never
 starts an AI analysis.
 
-### Reading the PDF once it is attached
+### Re-analysing papers once their PDF is attached
 
-Papers are kept and classified from title and abstract only. The PDF analysis is a separate display layer: it adds
-page-anchored claims and figure notes to the paper view and never changes topics, relevance, keywords or tracker
-assignments. A paper whose PDF arrived after its title/abstract analysis shows "PDF added after AI analysis" in the
-paper view. To add the PDF layer for those papers:
+A paper analysed before its PDF arrived keeps its abstract-based analysis; the detail panel then says the PDF was
+attached after the analysis. To redo those analyses from the full text:
 
 ```bash
 python scripts/reanalyze_stale_pdf.py                         # free preview: which papers, pages, estimated cost

@@ -77,10 +77,9 @@ Each line of output is one paper: `ATTACH` (open copy attached), `HELD` (license
 `PENDING` (no usable copy), `SEALED` (a non-open copy was held back), `SKIP` (verified but not attached, for
 example because the paper already has a PDF). The summary ends with the report and pending-list paths.
 
-Harvesting never starts an AI analysis. Papers are classified from title and abstract only; the PDF analysis is a
-display layer that adds page-anchored detail and never changes topics, relevance or tracker assignments. To add that
-layer for newly attached PDFs, preview first (free), show the user the paper count and cost estimate, and run the
-paid step only after they agree:
+Harvesting never starts an AI analysis, so newly attached papers keep their abstract-based analysis. To redo
+them from the full text, preview first (free), show the user the paper count and cost estimate, and run the paid
+step only after they agree:
 
 ```bash
 python scripts/reanalyze_stale_pdf.py                          # free preview + cost estimate

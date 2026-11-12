@@ -82,41 +82,6 @@ FALLBACK_MODEL = PDF_ANALYSIS_FALLBACK
 PREFER_PDF = True
 SEND_PDF_BYTES_TO_GEMINI = True
 MAX_PDF_MB_TO_SEND = 30
-
-# 2026-11-13 (owner): papers are KEPT and CLASSIFIED from title + abstract (+ public metadata) only. Reading the
-# PDF is the heavy step and only adds detail for display. So an analysis that read the PDF is stored as a display
-# layer under payload[PDF_LAYER_KEY] and never touches what classifies the paper: topics, facets, relevance,
-# keywords, the summary columns the keyword predicate reads, or tracker assignments. The ai_analyses columns and
-# the top level of payload always hold the title/abstract analysis, which is also all that SeismoHub Lite publishes.
-PDF_LAYER_KEY = "pdf_analysis"
-# Keys of a PDF analysis that must not override the title/abstract analysis, even for display.
-CLASSIFICATION_KEYS = frozenset({"cos_topic_match", "facets", "relevance_score", "keywords"})
-
-
-def pdf_layer_of(analysis: Any) -> Optional[Dict[str, Any]]:
-    """The PDF display layer of an AIAnalysis row (or None)."""
-    payload = getattr(analysis, "payload", None)
-    layer = payload.get(PDF_LAYER_KEY) if isinstance(payload, dict) else None
-    return layer if isinstance(layer, dict) else None
-
-
-def has_abstract_layer(analysis: Any) -> bool:
-    """True when the row's columns hold a title/abstract analysis. Rows written before 2026-11-13 by an analysis
-    that read the PDF (``pdf_used`` true, no PDF layer) do not."""
-    return analysis is not None and not bool(getattr(analysis, "pdf_used", False))
-
-
-def display_payload(payload: Any) -> Dict[str, Any]:
-    """The title/abstract payload with the PDF layer's display fields laid over it (detail view only).
-    Classification keys always stay from the title/abstract analysis."""
-    if not isinstance(payload, dict):
-        return {}
-    layer = payload.get(PDF_LAYER_KEY)
-    base = {k: v for k, v in payload.items() if k != PDF_LAYER_KEY}
-    if not isinstance(layer, dict):
-        return base
-    base.update({k: v for k, v in layer.items() if k not in CLASSIFICATION_KEYS and k != PDF_LAYER_KEY})
-    return base
 PDF_TEXT_MAX_PAGES = 30
 PDF_TEXT_MAX_CHARS = 120_000
 FIGURE_SCAN_MAX_PAGES = 40
@@ -2352,7 +2317,6 @@ def _store_analysis(
     paper: Paper,
     result: dict,
     analysis_model_id: str = "",
-    layer: str = "abstract",
 ) -> dict:
     # ``analysis_model_id`` is the wire ID actually returned by call_gemini —
     # could be PRIMARY_MODEL or FALLBACK_MODEL depending on whether the
@@ -2416,26 +2380,6 @@ def _store_analysis(
     normalized_payload["facets"] = _normalize_facets(result.get("facets"), _primary)
 
     analysis = paper.ai_analysis
-    if layer == "pdf":
-        # Display layer only (see PDF_LAYER_KEY): columns, topics and tracker assignments stay as they are.
-        if not has_abstract_layer(analysis):
-            raise RuntimeError("a PDF analysis needs the title/abstract analysis of the paper first")
-        merged = dict(analysis.payload) if isinstance(analysis.payload, dict) else {}
-        merged[PDF_LAYER_KEY] = normalized_payload
-        analysis.payload = merged
-        db_session.commit()
-        db_session.refresh(analysis)
-        return display_payload(merged)
-
-    # Title/abstract layer. Keep an existing PDF layer; a legacy row whose columns came from a PDF analysis keeps
-    # that analysis as its PDF layer while this title/abstract analysis takes over the columns.
-    previous = analysis.payload if (analysis is not None and isinstance(analysis.payload, dict)) else {}
-    kept_layer = previous.get(PDF_LAYER_KEY) if isinstance(previous.get(PDF_LAYER_KEY), dict) else None
-    if kept_layer is None and analysis is not None and getattr(analysis, "pdf_used", False):
-        kept_layer = {k: v for k, v in previous.items() if k != PDF_LAYER_KEY} or None
-    if kept_layer:
-        normalized_payload[PDF_LAYER_KEY] = kept_layer
-
     if analysis is None:
         analysis = AIAnalysis(paper_id=paper.id)
         db_session.add(analysis)
@@ -2517,16 +2461,6 @@ def _run_analysis(
             force_metadata_only = True
             _emit(progress_callback, f"{label_prefix}TDM-licensed PDF ({tdm_reason}); skipping Gemini PDF upload and using abstract/web context", stage="analysis_prepare", current=position, total=total, paper_id=paper.id)
 
-    # Classification first (2026-11-13): before a PDF is read, make sure the paper has its title/abstract analysis,
-    # which alone sets topics, relevance and tracker assignments. The PDF run below only adds a display layer.
-    built_abstract_layer = False
-    if PREFER_PDF and item.has_pdf and not force_metadata_only and not has_abstract_layer(paper.ai_analysis):
-        _emit(progress_callback, f"{label_prefix}Classifying from title and abstract before reading the PDF", stage="analysis_prepare", current=position, total=total, paper_id=paper.id)
-        _run_analysis(paper, db_session, pdf_path=None, force_metadata_only=True,
-                      progress_callback=progress_callback, position=position, total=total)
-        db_session.expire(paper, ["ai_analysis"])
-        built_abstract_layer = True
-
     mode = "pdf" if (PREFER_PDF and item.has_pdf and not force_metadata_only) else "no_pdf"
     web_ctx = None
     parts: Optional[List[Any]] = None
@@ -2549,8 +2483,6 @@ def _run_analysis(
             else:
                 mode = "no_pdf"
                 _emit(progress_callback, f"{label_prefix}PDF text extraction failed; switching to metadata/web mode", stage="analysis_fallback", current=position, total=total, paper_id=paper.id)
-                if built_abstract_layer:  # the title/abstract analysis was just made above; do not pay for it twice
-                    return display_payload(paper.ai_analysis.payload if paper.ai_analysis else {})
 
     if mode == "no_pdf":
         with _WEB_CTX_SEMAPHORE:
@@ -2670,8 +2602,7 @@ def _run_analysis(
     # ``PRIMARY_MODEL`` / "" so ``display_name_for_model("")`` renders
     # "Unknown model" rather than blowing up the analyse pipeline.
     analysis_model_id = analysis_model_id or PRIMARY_MODEL or ""
-    return _store_analysis(db_session, paper, result, analysis_model_id=analysis_model_id,
-                           layer="pdf" if pdf_used else "abstract")
+    return _store_analysis(db_session, paper, result, analysis_model_id=analysis_model_id)
 
 
 def analyze_paper_from_pdf(
