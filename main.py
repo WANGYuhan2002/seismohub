@@ -433,6 +433,8 @@ def _pdf_analysis_state(paper: Paper, analysis: Any) -> str:
         return "not_analyzed"
     if analysis.pdf_used:
         return "used"
+    if isinstance(analysis.payload, dict) and isinstance(analysis.payload.get("pdf_analysis"), dict):
+        return "used"  # 2026-11-13: the PDF analysis is stored as a display layer (analyze_service.PDF_LAYER_KEY)
     try:
         from services.pdf_page_cache import FITZ_LOCK
         from services.tdm_guard_and_xml_renderer import is_tdm_restricted_paper
@@ -527,6 +529,13 @@ def _safe_json_load(raw: Optional[str]) -> Dict[str, Any]:
 def _paper_to_dict(paper: Paper, *, include_detail: bool = False, project_folder: Optional[str] = None) -> Dict[str, Any]:
     analysis = paper.ai_analysis
     payload = analysis.payload if analysis else {}
+    # 2026-11-13: an analysis that read the PDF is a display layer (analyze_service.PDF_LAYER_KEY). Only the detail
+    # view lays it over the title/abstract analysis; lists, filters and classification never see it.
+    pdf_layer = None
+    if include_detail and isinstance(payload, dict) and isinstance(payload.get("pdf_analysis"), dict):
+        from services.analyze_service import display_payload as _display_payload
+        pdf_layer = payload["pdf_analysis"]
+        payload = _display_payload(payload)
     # FN-B4-A01-1 (VERIFY-M, 2026-05-19): apply read-time normalization to
     # `figure_analyses` so payloads written before FIX-ANALYZE landed still
     # expose the canonical `caption_summary` / `key_finding` aliases at the
@@ -619,7 +628,7 @@ def _paper_to_dict(paper: Paper, *, include_detail: bool = False, project_folder
         "journal_color": journal_color(paper.journal or "Others"),
         "first_author": authors[0] if authors else "Unknown",
         "relevance_score": analysis.relevance_score if analysis else 0,
-        "pdf_used": analysis.pdf_used if analysis else False,
+        "pdf_used": bool(pdf_layer.get("pdf_used")) if pdf_layer else (analysis.pdf_used if analysis else False),
         "analysis_summary": (payload.get("summary_150w_en") if payload else "") or "",
         "analysis_summary_zh": (payload.get("summary_150w_zh") if payload else "") or "",
         "analysis_takeaway": (payload.get("one_sentence_takeaway_en") if payload else "") or "",
@@ -636,13 +645,15 @@ def _paper_to_dict(paper: Paper, *, include_detail: bool = False, project_folder
             or (analysis.recommended_tags if analysis else None)
             or []
         ),
-        "used_sources": analysis.used_sources if analysis else [],
+        "used_sources": (payload.get("used_sources") if pdf_layer else None) or (analysis.used_sources if analysis else []),
         "cos_topic_match": analysis.topic_matches if analysis else [],
         "facets": (analysis.facets if analysis else None) or {},
-        "evidence": {
-            "based_on": analysis.evidence_based_on if analysis else "",
-            "notes": analysis.evidence_notes if analysis else "",
-        },
+        "evidence": (
+            dict(payload.get("evidence") or {}) if pdf_layer else {
+                "based_on": analysis.evidence_based_on if analysis else "",
+                "notes": analysis.evidence_notes if analysis else "",
+            }
+        ),
         "figure_insights": _paper_figure_insights(paper, payload, include_fallback=include_detail),
         # The full raw Gemini payload is detail-only: the only consumer is the
         # detail modal (openPaperDetail), which re-fetches GET /api/papers/{id}

@@ -8,11 +8,15 @@ This tool finds those papers and re-runs the normal PDF analysis on them
 (``services.analyze_service.analyze_paper_from_pdf``: gemini-4-argon, with the
 TDM guard inside ``_run_analysis``). It changes no existing source file.
 
-Selection: a PDF file is on disk, an analysis exists with ``pdf_used = 0``, and the
-TDM guard (``is_tdm_restricted_paper``) does not block the PDF. Ordered by the
-current relevance score (high first), then newest, so a budget cap stops at the
-least relevant papers. Re-running is safe: finished papers have ``pdf_used = 1``
-and drop out of the selection, so an interrupted run resumes where it stopped.
+Since 2026-11-13 the PDF analysis is a display layer (``payload["pdf_analysis"]``): it adds
+detail to the paper view and never changes the paper's topics, relevance, keywords or
+tracker assignments, which stay with the title/abstract analysis.
+
+Selection: a PDF file is on disk, an analysis exists with ``pdf_used = 0`` and no PDF
+layer yet, and the TDM guard (``is_tdm_restricted_paper``) does not block the PDF.
+Ordered by the current relevance score (high first), then newest, so a budget cap stops
+at the least relevant papers. Re-running is safe: finished papers carry a PDF layer and
+drop out of the selection, so an interrupted run resumes where it stopped.
 
 Usage:
     python3 scripts/reanalyze_stale_pdf.py                        # preview + cost estimate (free)
@@ -74,6 +78,7 @@ def estimate_tokens(pages: int, size_mb: float, max_pdf_mb: float = 30.0) -> tup
 def select_candidates(session, *, min_relevance=None, max_pages=None, ids=None):
     import fitz
     from models import AIAnalysis, Paper
+    from services.analyze_service import pdf_layer_of
     from services.tdm_guard_and_xml_renderer import is_tdm_restricted_paper
 
     query = (
@@ -87,8 +92,12 @@ def select_candidates(session, *, min_relevance=None, max_pages=None, ids=None):
         query = query.filter(AIAnalysis.relevance_score >= min_relevance)
     papers = query.order_by(AIAnalysis.relevance_score.desc(), Paper.published_date.desc()).all()
 
-    picked, skipped = [], {"missing_file": 0, "tdm_blocked": 0, "too_many_pages": 0, "unreadable": 0}
+    picked, skipped = [], {"has_pdf_layer": 0, "missing_file": 0, "tdm_blocked": 0, "too_many_pages": 0,
+                           "unreadable": 0}
     for paper in papers:
+        if pdf_layer_of(paper.ai_analysis) is not None:
+            skipped["has_pdf_layer"] += 1
+            continue
         path = Path(paper.pdf_path)
         if not path.is_file():
             skipped["missing_file"] += 1
@@ -224,15 +233,18 @@ def main() -> None:
             A.analyze_paper_from_pdf(item["id"], item["pdf_path"], session, progress_callback=lambda *a, **k: None)
             session.expire_all()
             analysis = session.get(Paper, item["id"]).ai_analysis
+            layer = A.pdf_layer_of(analysis) or {}  # the PDF analysis lives in its display layer
+            layer_model = layer.get("analysis_model") or ""
+            layer_pdf_used = bool(layer.get("pdf_used"))
             price = price_for(date.today())
             call_cost = cost_usd(last_usage.get("in", 0), last_usage.get("out", 0), price)
             spent += call_cost
-            row.update({"ok": True, "model": analysis.analysis_model, "pdf_used": bool(analysis.pdf_used),
-                        "evidence": analysis.evidence_based_on, "tokens_in": last_usage.get("in"),
+            row.update({"ok": True, "model": layer_model, "pdf_used": layer_pdf_used,
+                        "evidence": (layer.get("evidence") or {}).get("based_on", ""), "tokens_in": last_usage.get("in"),
                         "tokens_out": last_usage.get("out"), "cost_usd": round(call_cost, 4)})
             done += 1
             consecutive_errors = 0
-            print(f"[{n}/{len(picked)}] {item['id']} ok  model={analysis.analysis_model}  pdf_used={bool(analysis.pdf_used)}  "
+            print(f"[{n}/{len(picked)}] {item['id']} ok  model={layer_model}  pdf_used={layer_pdf_used}  "
                   f"${call_cost:.3f}  total ${spent:.2f}  ({time.time() - started:.0f}s)", flush=True)
         except Exception as exc:
             session.rollback()

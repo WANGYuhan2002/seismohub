@@ -3,8 +3,8 @@
 **English** · [中文](README_zh.md)
 
 A self-hosted, local-first literature hub for seismology. SeismoHub tracks new papers on the topics, authors and
-journals you follow, keeps only the ones that are really about seismology, reads them with Google Gemini, and links
-every AI statement to the page and paragraph it came from. It runs on your own machine as one FastAPI process with a
+journals you follow, keeps and classifies them from their titles and abstracts, reads the full text with Google
+Gemini once a PDF is attached, and links every AI statement to the page and paragraph it came from. It runs on your own machine as one FastAPI process with a
 SQLite database. There is no account, no telemetry and no cloud sync; your library is a file you own.
 
 ![SeismoHub: pick a tracker, open a paper, read the AI analysis next to the PDF](docs/images/demo.gif)
@@ -13,9 +13,10 @@ SQLite database. There is no account, no telemetry and no cloud sync; your libra
 
 ## How it works
 
-SeismoHub is a pipeline in four stages around one SQLite library. The cheap steps (fetching, merging duplicates,
-filtering, embeddings) run on every paper. The expensive one, reading a paper with Gemini, runs when you open that
-paper, or in the background for every new paper if you switch that on.
+SeismoHub is a pipeline in four stages around one SQLite library. One rule runs through it: **everything that decides
+whether a paper is kept and where it is filed uses only its title, abstract and public metadata.** Reading the full
+PDF is the heavy step. It happens only after a paper is in the library and has a PDF, and it only adds detail to the
+paper view; it never changes how the paper is classified.
 
 ```mermaid
 flowchart TB
@@ -28,34 +29,34 @@ flowchart TB
     end
     subgraph KEEP["② What is kept"]
         direction LR
-        DD["Merge duplicates<br/>DOI › title › link"] --> KG["Keyword gate<br/>1 core or 2 weaker terms"] --> LG["LLM gate<br/>Gemini Flash: is it seismology?"]
+        DD["Merge duplicates<br/>DOI › title › link"] --> KG["Keyword gate<br/>1 core or 2 weaker terms"] --> LG["LLM gate · Gemini Flash<br/>reads title + abstract:<br/>is it seismology?"]
     end
     ME["Your own additions<br/>DOI · PDF · watch folder · Zotero"]
     DB[("Library<br/>SQLite + embeddings")]
     subgraph CLS["③ How papers are classified"]
         direction LR
-        AI["AI analysis · Gemini<br/>reads the PDF or the abstract<br/>topics · relevance<br/>claims with page anchors"]
+        AI["Title/abstract analysis<br/>Gemini Flash, no PDF<br/>topics · relevance · takeaway"]
         TR["Tracker rules<br/>keyword · journal · author<br/>topic · semantic → monthly folders"]
         AI -->|topics| TR
     end
+    subgraph DEEP["Reading the PDF · after a paper is kept and has a PDF"]
+        direction LR
+        HV["PDF from harvest_pdfs.py<br/>or your upload"] --> CK{"licence<br/>check"}
+        CK -->|open| PA["PDF analysis · Gemini Pro tier<br/>page-anchored claims · figures"]
+        CK -->|licensed| BND["paper_bundles/<br/>stays local, no AI"]
+    end
     subgraph OUT["④ How it is presented"]
         direction LR
-        APP["Web app<br/>trackers · PDF + analysis<br/>chat with citations"]
+        APP["Web app<br/>trackers · paper view<br/>chat with citations"]
         EXP["Exports<br/>BibTeX · RIS · Obsidian"]
-        LITE["SeismoHub Lite<br/>public read-only site"]
+        LITE["SeismoHub Lite<br/>title/abstract notes only"]
         APP ~~~ EXP ~~~ LITE
-    end
-    subgraph FT["Full text · harvest_pdfs.py"]
-        direction LR
-        HV["Open channels<br/>+ your TDM keys"] --> CK{"4 checks<br/>licence tier"}
-        CK -->|open| ATT["Attached<br/>AI may read it"]
-        CK -->|licensed| BND["paper_bundles/<br/>stays local"]
     end
     SRC --> KEEP --> DB
     ME --> DB
     DB --> CLS --> OUT
-    DB -.-> FT
-    FT -.->|full text| CLS
+    DB -.-> DEEP
+    DEEP -.->|"paper view only,<br/>never classification"| OUT
 ```
 
 **① Where papers come from.** Every six hours the server collects the papers of the past 30 days from the journals in
@@ -83,14 +84,21 @@ embedding of its title and abstract for semantic matching.
   institutions, AI topics, semantic similarity to a short description, or a date window. A scheduler re-checks every
   tracker on its own cadence (daily, weekly or monthly) and files matches into monthly folders, or into
   institution / author folders for author trackers. Eleven seismology presets come built in.
-- **AI analysis.** Gemini reads the PDF when one is attached, otherwise the abstract plus web metadata. It returns up
-  to three primary topics from a fixed taxonomy of 19 seismology topics (with an *off-topic* label for anything
-  else), facets for method, data type, target and paper type, a relevance score, a one-sentence takeaway, a bilingual
-  summary, and structured claims (method, data, results, limitations, novelty), each anchored to the section, page and
-  paragraph it came from. The topics feed back into the tracker rules.
+- **Title/abstract analysis.** A quick Gemini model reads the title, the abstract and public metadata (OpenAlex,
+  Crossref, Semantic Scholar, and web search snippets if you configure them), never the PDF. It returns up to three
+  primary topics from a fixed taxonomy of 19 seismology topics (with an *off-topic* label for anything else), facets
+  for method, data type, target and paper type, a relevance score, keywords, a one-sentence takeaway and a bilingual
+  summary. These are what the tracker rules use. Every paper gets this analysis when you open it, or in the
+  background if you switch that on.
+
+**Reading the PDF.** Once a paper is in the library and has a PDF (harvested, uploaded or imported), a stronger
+Gemini model reads the full text and adds structured claims (method, data, results, limitations, novelty), each
+anchored to the section, page and paragraph it came from, plus notes on the figures. This PDF analysis is stored as a
+separate layer: the paper view shows it, but it never changes topics, relevance, keywords or tracker assignments, and
+SeismoHub Lite never publishes it. Licence-restricted PDFs are not sent to the AI at all.
 
 **④ How it is presented.** The web app shows your trackers with unread counts, a paper stream with filters and
-sorting, and a detail view with the PDF beside the analysis. A chat for each paper answers questions with citations;
+sorting, and a paper view with the PDF beside the analysis (the PDF layer when there is one). A chat for each paper answers questions with citations;
 clicking one scrolls the PDF to the cited paragraph. The library exports to BibTeX, RIS and CSL-JSON, mirrors to an
 Obsidian vault, and can be published read-only as SeismoHub Lite (next section).
 
@@ -123,7 +131,7 @@ How Lite is cut out of the heavy library:
   analyses.
 - It leaves out PDFs and their paths, embeddings, reading state, notes, projects, the chat, verbatim figure captions,
   and papers classified as off-topic.
-- Only analyses made from abstracts and metadata are published, never ones made from a PDF, so no full text is
+- Only the title/abstract analysis is published. The PDF layer never leaves your machine, so no full text is
   republished.
 - The output is static JSON (the list, the abstracts, and per-paper analyses in shards) plus one HTML file. Search and
   filters run in the reader's browser; the site has no server, no AI and no API key.
@@ -137,8 +145,8 @@ How Lite is cut out of the heavy library:
 
 - **Tracking:** trackers by topic, author, journal or institution with daily / weekly / monthly cadence; 11
   seismology presets; semantic matching; unread counts and an inbox of what is new since your last visit.
-- **Reading:** bilingual AI analysis with page-anchored claims; the PDF beside the analysis; a chat per paper with
-  clickable citations, Markdown and LaTeX.
+- **Reading:** a bilingual title/abstract analysis for every paper; a deeper PDF analysis with page-anchored claims
+  once a PDF is attached; the PDF beside the analysis; a chat per paper with clickable citations, Markdown and LaTeX.
 - **In and out:** add papers from a DOI, arXiv ID, PMID / PMC ID, URL or free text; single or bulk PDF upload matched
   by DOI and title; watch folders; Zotero import; export to BibTeX, RIS, CSL-JSON, a PDF zip and an Obsidian vault.
 - **Full text:** a licence-aware harvester with an agent skill; see [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
@@ -155,8 +163,8 @@ How Lite is cut out of the heavy library:
 
 ![AI analysis and PDF reader](docs/images/paper-detail.png)
 
-**Structured analysis with page references.** Method, data, results, limitations and novelty, each pointing to the
-section and page it came from.
+**Structured analysis with page references** (the PDF layer). Method, data, results, limitations and novelty, each
+pointing to the section and page it came from.
 
 ![Structured analysis](docs/images/analysis.png)
 
@@ -241,8 +249,9 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
   database.
 - Papers that publishers block for scripts are written to a checklist. Download those in your browser, then use
   **Upload missing PDFs** in the app.
-- Harvesting never starts an AI analysis. `scripts/reanalyze_stale_pdf.py` redoes the analyses that were written
-  before a paper's PDF arrived; it previews and estimates the cost unless you pass `--run`.
+- Harvesting never starts an AI analysis. `scripts/reanalyze_stale_pdf.py` adds the PDF layer to papers whose PDF
+  arrived after their analysis; it previews and estimates the cost unless you pass `--run`, and it does not change
+  how papers are classified.
 
 Channels, keys, licence tiers and reports are described in [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
 
@@ -263,8 +272,8 @@ list"*. The skill runs a dry run first, applies the licence rules, and summarise
   library and change your API keys.
 - **Keys** live in `.env` (git-ignored, mode 0600) or in `~/.config/seismo_harvester/keys.env` outside the
   repository. The Settings page only ever shows masked values.
-- **What is sent to Google.** The AI analysis uploads the attached PDF to Gemini. The chat sends cached page text.
-  Embeddings send titles and abstracts. Nothing else leaves your machine except metadata queries to the scholarly
+- **What is sent to Google.** The title/abstract analysis sends title, abstract and public metadata. The PDF
+  analysis uploads the attached PDF. The chat sends cached page text. Embeddings send titles and abstracts. Nothing else leaves your machine except metadata queries to the scholarly
   APIs listed above.
 - **Licensed full text stays local.** Copies obtained through institutional TDM licences, and PDFs that carry "All
   rights reserved" or an institutional download stamp without an open licence, are kept in `paper_bundles/`, never

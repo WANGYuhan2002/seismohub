@@ -14,6 +14,9 @@
 - `.env.example` turns off proactive background analysis by default (`DISABLE_EAGER_ANALYSIS=1`).
 - The retired browser-based crawler is not included.
 - Docs: README screenshots and demo GIF; a guide for adapting SeismoHub to other fields.
+- Papers are kept and classified from title and abstract only. The PDF analysis is a separate display layer
+  (`payload["pdf_analysis"]`) that never changes topics, relevance, keywords or tracker assignments.
+  `scripts/split_pdf_analyses.py` converts analyses written by older versions.
 
 - 核心应用：FastAPI + SQLite + 单页界面；带 11 个地震学预置的追踪器；带段落锚点引用的 Gemini 分析；单篇问答；
   导入（标识符、上传、监视文件夹、Zotero）与导出（BibTeX、RIS、CSL-JSON、PDF 压缩包、Obsidian 笔记库）。
@@ -25,3 +28,5 @@
 - `.env.example` 默认关闭后台主动分析（`DISABLE_EAGER_ANALYSIS=1`）。
 - 已退役的浏览器爬虫不包含在内。
 - 文档：README 截图和演示 GIF；把 SeismoHub 迁移到其他学科的指南。
+- 论文的收录和分类只依据标题和摘要。PDF 分析单独存成展示层（`payload["pdf_analysis"]`），从不改变主题、相关度、
+  关键词和追踪器归类。旧版本写下的分析可以用 `scripts/split_pdf_analyses.py` 转换。
