@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:arxiv="http://arxiv.org/schemas/atom"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xml:lang="en">
+  <link xmlns="http://www.w3.org/2005/Atom" href="http://arxiv.org/api/query?search_query%3D%26id_list%3D2404.12345%26start%3D0%26max_results%3D10" rel="self" type="application/atom+xml"/>
+  <title type="html">ArXiv Query: Search Query, id_list=2404.12345</title>
+  <id>http://arxiv.org/api/HVHxaHgS0xo3KNW7Zt_9nA</id>
+  <updated>2024-04-15T00:00:00-04:00</updated>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2404.12345v1</id>
+    <updated>2024-04-15T14:30:00Z</updated>
+    <published>2024-04-15T14:30:00Z</published>
+    <title>Hybrid H/V and Array-Beamforming Site-Response Mapping of the 2024 Sichuan Sequence</title>
+    <summary>We present a hybrid methodology combining horizontal-to-vertical spectral ratio (H/V) analysis with array-based beamforming for site-response characterisation of the 2024 Sichuan earthquake sequence. Using data from 42 broadband stations deployed between January and August 2024, we recover the near-surface velocity structure to within 5% RMS. The approach reduces the ambiguity inherent in single-method inversions and provides direct validation against co-located borehole measurements. Results confirm that surface-geology proxies underperform the physics-based hybrid map by approximately 30% across the study region.</summary>
+    <author>
+      <name>Jane Doe</name>
+    </author>
+    <author>
+      <name>John Smith</name>
+    </author>
+    <arxiv:doi>10.1029/2024JB028991</arxiv:doi>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="physics.geo-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.geo-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2404.12345v1" rel="alternate" type="text/html"/>
+    <link title="pdf" href="https://arxiv.org/pdf/2404.12345v1.pdf" rel="related" type="application/pdf"/>
+  </entry>
+</feed>

@@ -1,0 +1,36 @@
+# SeismoHub with Docker Compose / 用 Docker Compose 运行 SeismoHub
+#
+#   cp .env.example .env     # add your keys / 填入密钥
+#   docker compose up -d --build
+#   open http://localhost:8000
+#
+# Data stays on the host in ./data, ./downloads and ./paper_bundles.
+# 数据保存在宿主机的 ./data、./downloads 和 ./paper_bundles。
+
+services:
+  seismohub:
+    build: .
+    image: seismohub:latest
+    container_name: seismohub
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Fixed inside the container; change the host side with SEISMOHUB_HOST_PORT.
+      SEISMO_PORT: "8000"
+      SEISMO_OPEN_BROWSER: "0"
+      SEISMO_DB_PATH: /app/data/seismo_hub.db
+    ports:
+      # Localhost only: the app has no login. Use a reverse proxy with auth for remote access.
+      # 只绑定本机：应用没有登录功能。远程访问请在前面加带认证的反向代理。
+      - "127.0.0.1:${SEISMOHUB_HOST_PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+      - ./paper_bundles:/app/paper_bundles
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

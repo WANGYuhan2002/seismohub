@@ -1,0 +1,48 @@
+# Runtime dependencies for the seismology paper hub.
+#
+# ⚠️  REQUIRES PYTHON 3.11 (3.11 or newer). These versions were captured from a
+#     CLEAN install verified on 2026-07-10 (CPython 3.11, macOS arm64) and are
+#     PINNED so every install gets the exact same, working set. An UNPINNED
+#     install pulls the latest of each package, several of which now require
+#     Python 3.11+ (e.g. numpy 2.4) and fail on an older interpreter.
+#
+# New-machine setup (see README.md for the full walk-through):
+#     python3.11 -m venv .venv
+#     source .venv/bin/activate
+#     pip install -r requirements.txt
+#     python main.py
+#
+# To re-lock after a deliberate upgrade:
+#     pip install -U <pkg> && pip freeze > requirements.lock
+
+# --- Web framework ---
+fastapi==0.139.0
+uvicorn==0.51.0
+sqlalchemy==1.4.54          # code targets the 1.4 API (.query); do NOT jump to 2.x
+pydantic==2.13.4
+jinja2==3.1.6
+requests==2.34.2
+python-dotenv==1.2.2
+python-multipart==0.0.32
+
+# --- Fetching + AI analysis ---
+feedparser==6.0.12
+google-genai==2.11.0
+tenacity==9.1.4
+PyMuPDF==1.28.0
+
+# --- Semantic matching (numpy backs the cosine ranking + embedding (de)serialise) ---
+numpy==2.4.6
+
+# --- CJK author-sort (romanise Chinese family names so 王小明 sorts under W) ---
+pypinyin==0.55.0
+
+# --- Watch-folder auto-ingest ---
+watchdog==6.0.0
+
+# --- Test harness (safe to keep; only used by tests/) ---
+pytest==9.1.1
+httpx==0.28.1              # also required by the FastAPI TestClient
+responses==0.26.2
+freezegun==1.5.5
+

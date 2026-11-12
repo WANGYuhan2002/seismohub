@@ -1,0 +1,841 @@
+{
+  "_comment": "SeismoHub preset trackers (v2, 2026-07-05). 11 presets aligned to COS-20 topics. Seeded into a fresh DB by db._seed_preset_trackers AND served to the 'Add from template' UI via GET /api/presets. Semantic predicates carry description only; embedded at create time by create_project.",
+  "presets": [
+    {
+      "name": "🏆 Top-journal Seismology",
+      "type": "topic_monitor",
+      "config": {
+        "match": "all",
+        "predicates": [
+          {
+            "type": "journal",
+            "any_of": [
+              "NATURE",
+              "NAT GEOSCI",
+              "NAT COMMS",
+              "SCIENCE",
+              "SCI ADV",
+              "PNAS"
+            ]
+          },
+          {
+            "type": "semantic",
+            "description": "seismology, earthquakes, seismic waves, Earth interior structure, seismic imaging and monitoring",
+            "threshold": 0.55
+          }
+        ]
+      },
+      "sort_order": 1
+    },
+    {
+      "name": "🌟 Followed Groups & Preprints",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "author",
+            "any_of": [
+              "Hiroo Kanamori",
+              "Jean-Paul Ampuero",
+              "Robert W. Clayton",
+              "Zhongwen Zhan",
+              "Victor C. Tsai",
+              "Zachary E. Ross",
+              "Gregory C. Beroza",
+              "Biondo L. Biondi",
+              "Simon L. Klemperer",
+              "Eric M. Dunham",
+              "William L. Ellsworth",
+              "Eileen Rose Martin",
+              "S. Mostafa Mousavi",
+              "Karianne J. Bergen",
+              "Jesse F. Lawrence",
+              "Michael Manga",
+              "Roland Burgmann",
+              "Barbara Romanowicz",
+              "Richard M. Allen",
+              "Douglas S. Dreger",
+              "Weiqiang Zhu",
+              "Qingkai Kong",
+              "Nathaniel J. Lindsey",
+              "Peter Gerstoft",
+              "Peter M. Shearer",
+              "Yehuda Bock",
+              "Gabi Laske",
+              "Wenyuan Fan",
+              "Michael J. Bianco",
+              "Adrian K. Doran",
+              "Germán A. Prieto",
+              "William B. Frank",
+              "Camilla Cattania",
+              "Robert D. van der Hilst",
+              "Brendan J. Meade",
+              "Miaki Ishii",
+              "Jeroen Tromp",
+              "Frederik J. Simons",
+              "Jeroen Ritsema",
+              "Yihe Huang",
+              "Zachary J. (Zack) Spica",
+              "Paul C. Sava",
+              "Jeffrey Shragge",
+              "Whitney J. Trainor-Guitton",
+              "Göran Ekström",
+              "Geoffrey A. Abers",
+              "Michael G. Bostock",
+              "Felix Waldhauser",
+              "Won-Young Kim",
+              "Harold J. Tobin",
+              "Marine A. Denolle",
+              "Heidi Houston",
+              "Thorne Lay",
+              "Emily E. Brodsky",
+              "Yehuda Ben-Zion",
+              "Demian M. Saffer",
+              "Thorsten W. Becker",
+              "Stephen P. Grand",
+              "Éléonore Stutzmann",
+              "Jean-Paul Montagner",
+              "Pascal Bernard",
+              "Claudio Satriano",
+              "Domenico Giardini",
+              "Stefan Wiemer",
+              "Andreas Fichtner",
+              "Men-Andrin Meier",
+              "Whitney M. Behr",
+              "Jeannot Trampert",
+              "Hanneke Paulssen",
+              "Heiner Igel",
+              "Tobias Megies",
+              "Torsten Dahm",
+              "Frederik Tilmann",
+              "Charlotte M. Krawczyk",
+              "J. Michael Kendall",
+              "Nicholas Rawlinson",
+              "Karin Sigloch",
+              "Tarje Nissen-Meyer",
+              "Warner Marzocchi",
+              "Michel Campillo",
+              "Allison L. Bent",
+              "Andrew Hooper",
+              "Lapo Boschi",
+              "Aldo Zollo",
+              "Christine Thomas",
+              "Andrew Curtis",
+              "Lindsay Yu-Ling Chuang",
+              "Yixiao Sheng"
+            ],
+            "author_ids": [
+              "A5001452413",
+              "A5062511933",
+              "A5085830112",
+              "A5007353054",
+              "A5087087014",
+              "A5006827123",
+              "A5084849254",
+              "A5060147695",
+              "A5045665649",
+              "A5034914768",
+              "A5042043834",
+              "A5032569616",
+              "A5027330844",
+              "A5033276810",
+              "A5108537396",
+              "A5040980912",
+              "A5051538825",
+              "A5089907342",
+              "A5059733584",
+              "A5089045842",
+              "A5070811279",
+              "A5029766119",
+              "A5112891122",
+              "A5004718675",
+              "A5076510143",
+              "A5001535652",
+              "A5044234242",
+              "A5083642903",
+              "A5018064114",
+              "A5013274310",
+              "A5047879902",
+              "A5065964598",
+              "A5004853517",
+              "A5081130716",
+              "A5068079849",
+              "A5003739257",
+              "A5034672570",
+              "A5090527256",
+              "A5032781303",
+              "A5066528762",
+              "A5067221794",
+              "A5035843202",
+              "A5062593366",
+              "A5088879811",
+              "A5054477457",
+              "A5052108638",
+              "A5005322254",
+              "A5055883362",
+              "A5100644001",
+              "A5040107061",
+              "A5027819799",
+              "A5073557394",
+              "A5055979975",
+              "A5072552158",
+              "A5002807424",
+              "A5008198868",
+              "A5037573161",
+              "A5041737030",
+              "A5020159080",
+              "A5006615158",
+              "A5064159185",
+              "A5083900726",
+              "A5032058217",
+              "A5034454973",
+              "A5017764759",
+              "A5002626127",
+              "A5069036996",
+              "A5088631741",
+              "A5044669071",
+              "A5088160421",
+              "A5067515381",
+              "A5014965035",
+              "A5055229127",
+              "A5088742917",
+              "A5086300371",
+              "A5075778736",
+              "A5002235823",
+              "A5035683871",
+              "A5084775171",
+              "A5046672035",
+              "A5113706820",
+              "A5091769787",
+              "A5059392643",
+              "A5026144426",
+              "A5048130497",
+              "A5001742126",
+              "A5070377208",
+              "A5057326987"
+            ],
+            "author_meta": {
+              "A5001452413": {
+                "name": "Hiroo Kanamori",
+                "institution": "Caltech"
+              },
+              "A5062511933": {
+                "name": "Jean-Paul Ampuero",
+                "institution": "Caltech"
+              },
+              "A5085830112": {
+                "name": "Robert W. Clayton",
+                "institution": "Caltech"
+              },
+              "A5007353054": {
+                "name": "Zhongwen Zhan",
+                "institution": "Caltech"
+              },
+              "A5087087014": {
+                "name": "Victor C. Tsai",
+                "institution": "Caltech"
+              },
+              "A5006827123": {
+                "name": "Zachary E. Ross",
+                "institution": "Caltech"
+              },
+              "A5084849254": {
+                "name": "Gregory C. Beroza",
+                "institution": "Stanford"
+              },
+              "A5060147695": {
+                "name": "Biondo L. Biondi",
+                "institution": "Stanford"
+              },
+              "A5045665649": {
+                "name": "Simon L. Klemperer",
+                "institution": "Stanford"
+              },
+              "A5034914768": {
+                "name": "Eric M. Dunham",
+                "institution": "Stanford"
+              },
+              "A5042043834": {
+                "name": "William L. Ellsworth",
+                "institution": "Stanford"
+              },
+              "A5032569616": {
+                "name": "Eileen Rose Martin",
+                "institution": "Stanford"
+              },
+              "A5027330844": {
+                "name": "S. Mostafa Mousavi",
+                "institution": "Stanford"
+              },
+              "A5033276810": {
+                "name": "Karianne J. Bergen",
+                "institution": "Stanford"
+              },
+              "A5108537396": {
+                "name": "Jesse F. Lawrence",
+                "institution": "Stanford"
+              },
+              "A5040980912": {
+                "name": "Michael Manga",
+                "institution": "UC Berkeley"
+              },
+              "A5051538825": {
+                "name": "Roland Burgmann",
+                "institution": "UC Berkeley"
+              },
+              "A5089907342": {
+                "name": "Barbara Romanowicz",
+                "institution": "UC Berkeley"
+              },
+              "A5059733584": {
+                "name": "Richard M. Allen",
+                "institution": "UC Berkeley"
+              },
+              "A5089045842": {
+                "name": "Douglas S. Dreger",
+                "institution": "UC Berkeley"
+              },
+              "A5070811279": {
+                "name": "Weiqiang Zhu",
+                "institution": "UC Berkeley"
+              },
+              "A5029766119": {
+                "name": "Qingkai Kong",
+                "institution": "UC Berkeley"
+              },
+              "A5112891122": {
+                "name": "Nathaniel J. Lindsey",
+                "institution": "UC Berkeley"
+              },
+              "A5004718675": {
+                "name": "Peter Gerstoft",
+                "institution": "UCSD · Scripps"
+              },
+              "A5076510143": {
+                "name": "Peter M. Shearer",
+                "institution": "UCSD · Scripps"
+              },
+              "A5001535652": {
+                "name": "Yehuda Bock",
+                "institution": "UCSD · Scripps"
+              },
+              "A5044234242": {
+                "name": "Gabi Laske",
+                "institution": "UCSD · Scripps"
+              },
+              "A5083642903": {
+                "name": "Wenyuan Fan",
+                "institution": "UCSD · Scripps"
+              },
+              "A5018064114": {
+                "name": "Michael J. Bianco",
+                "institution": "UCSD · Scripps"
+              },
+              "A5013274310": {
+                "name": "Adrian K. Doran",
+                "institution": "UCSD · Scripps"
+              },
+              "A5047879902": {
+                "name": "Germán A. Prieto",
+                "institution": "MIT"
+              },
+              "A5065964598": {
+                "name": "William B. Frank",
+                "institution": "MIT"
+              },
+              "A5004853517": {
+                "name": "Camilla Cattania",
+                "institution": "MIT"
+              },
+              "A5081130716": {
+                "name": "Robert D. van der Hilst",
+                "institution": "MIT"
+              },
+              "A5068079849": {
+                "name": "Brendan J. Meade",
+                "institution": "Harvard"
+              },
+              "A5003739257": {
+                "name": "Miaki Ishii",
+                "institution": "Harvard"
+              },
+              "A5034672570": {
+                "name": "Jeroen Tromp",
+                "institution": "Princeton"
+              },
+              "A5090527256": {
+                "name": "Frederik J. Simons",
+                "institution": "Princeton"
+              },
+              "A5032781303": {
+                "name": "Jeroen Ritsema",
+                "institution": "U Michigan"
+              },
+              "A5066528762": {
+                "name": "Yihe Huang",
+                "institution": "U Michigan"
+              },
+              "A5067221794": {
+                "name": "Zachary J. (Zack) Spica",
+                "institution": "U Michigan"
+              },
+              "A5035843202": {
+                "name": "Paul C. Sava",
+                "institution": "Colorado School of Mines"
+              },
+              "A5062593366": {
+                "name": "Jeffrey Shragge",
+                "institution": "Colorado School of Mines"
+              },
+              "A5088879811": {
+                "name": "Whitney J. Trainor-Guitton",
+                "institution": "Colorado School of Mines"
+              },
+              "A5054477457": {
+                "name": "Göran Ekström",
+                "institution": "Columbia · LDEO"
+              },
+              "A5052108638": {
+                "name": "Geoffrey A. Abers",
+                "institution": "Columbia · LDEO"
+              },
+              "A5005322254": {
+                "name": "Michael G. Bostock",
+                "institution": "Columbia · LDEO"
+              },
+              "A5055883362": {
+                "name": "Felix Waldhauser",
+                "institution": "Columbia · LDEO"
+              },
+              "A5100644001": {
+                "name": "Won-Young Kim",
+                "institution": "Columbia · LDEO"
+              },
+              "A5040107061": {
+                "name": "Harold J. Tobin",
+                "institution": "U Washington"
+              },
+              "A5027819799": {
+                "name": "Marine A. Denolle",
+                "institution": "U Washington"
+              },
+              "A5073557394": {
+                "name": "Heidi Houston",
+                "institution": "U Washington"
+              },
+              "A5055979975": {
+                "name": "Thorne Lay",
+                "institution": "UC Santa Cruz"
+              },
+              "A5072552158": {
+                "name": "Emily E. Brodsky",
+                "institution": "UC Santa Cruz"
+              },
+              "A5002807424": {
+                "name": "Yehuda Ben-Zion",
+                "institution": "USC"
+              },
+              "A5008198868": {
+                "name": "Demian M. Saffer",
+                "institution": "UT Austin"
+              },
+              "A5037573161": {
+                "name": "Thorsten W. Becker",
+                "institution": "UT Austin"
+              },
+              "A5041737030": {
+                "name": "Stephen P. Grand",
+                "institution": "UT Austin"
+              },
+              "A5020159080": {
+                "name": "Éléonore Stutzmann",
+                "institution": "IPGP Paris"
+              },
+              "A5006615158": {
+                "name": "Jean-Paul Montagner",
+                "institution": "IPGP Paris"
+              },
+              "A5064159185": {
+                "name": "Pascal Bernard",
+                "institution": "IPGP Paris"
+              },
+              "A5083900726": {
+                "name": "Claudio Satriano",
+                "institution": "IPGP Paris"
+              },
+              "A5032058217": {
+                "name": "Domenico Giardini",
+                "institution": "ETH Zurich"
+              },
+              "A5034454973": {
+                "name": "Stefan Wiemer",
+                "institution": "ETH Zurich"
+              },
+              "A5017764759": {
+                "name": "Andreas Fichtner",
+                "institution": "ETH Zurich"
+              },
+              "A5002626127": {
+                "name": "Men-Andrin Meier",
+                "institution": "ETH Zurich"
+              },
+              "A5069036996": {
+                "name": "Whitney M. Behr",
+                "institution": "ETH Zurich"
+              },
+              "A5088631741": {
+                "name": "Jeannot Trampert",
+                "institution": "Utrecht"
+              },
+              "A5044669071": {
+                "name": "Hanneke Paulssen",
+                "institution": "Utrecht"
+              },
+              "A5088160421": {
+                "name": "Heiner Igel",
+                "institution": "LMU Munich"
+              },
+              "A5067515381": {
+                "name": "Tobias Megies",
+                "institution": "LMU Munich"
+              },
+              "A5014965035": {
+                "name": "Torsten Dahm",
+                "institution": "GFZ Potsdam"
+              },
+              "A5055229127": {
+                "name": "Frederik Tilmann",
+                "institution": "GFZ Potsdam"
+              },
+              "A5088742917": {
+                "name": "Charlotte M. Krawczyk",
+                "institution": "GFZ Potsdam"
+              },
+              "A5086300371": {
+                "name": "J. Michael Kendall",
+                "institution": "Oxford/Cambridge"
+              },
+              "A5075778736": {
+                "name": "Nicholas Rawlinson",
+                "institution": "Oxford/Cambridge"
+              },
+              "A5002235823": {
+                "name": "Karin Sigloch",
+                "institution": "Oxford/Cambridge"
+              },
+              "A5035683871": {
+                "name": "Tarje Nissen-Meyer",
+                "institution": "Oxford/Cambridge"
+              },
+              "A5084775171": {
+                "name": "Warner Marzocchi",
+                "institution": "INGV Italy"
+              },
+              "A5046672035": {
+                "name": "Michel Campillo",
+                "institution": "ISTerre Grenoble"
+              },
+              "A5113706820": {
+                "name": "Allison L. Bent",
+                "institution": "Natural Resources Canada · Geological Survey of Canada"
+              },
+              "A5091769787": {
+                "name": "Andrew Hooper",
+                "institution": "University of Leeds"
+              },
+              "A5059392643": {
+                "name": "Lapo Boschi",
+                "institution": "University of Padua"
+              },
+              "A5026144426": {
+                "name": "Aldo Zollo",
+                "institution": "University of Naples Federico II"
+              },
+              "A5048130497": {
+                "name": "Christine Thomas",
+                "institution": "University of Münster"
+              },
+              "A5001742126": {
+                "name": "Andrew Curtis",
+                "institution": "University of Edinburgh"
+              },
+              "A5070377208": {
+                "name": "Lindsay Yu-Ling Chuang",
+                "institution": "Georgia Institute of Technology"
+              },
+              "A5057326987": {
+                "name": "Yixiao Sheng",
+                "institution": "University of Science and Technology of China"
+              }
+            }
+          },
+          {
+            "type": "arxiv_category",
+            "any_of": [
+              "physics.geo-ph"
+            ]
+          }
+        ]
+      },
+      "sort_order": 2
+    },
+    {
+      "name": "🔬 DAS / Fibre-optic Seismology",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Distributed acoustic sensing & fibre-optic seismology"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "distributed acoustic sensing",
+              "DAS",
+              "fibre-optic",
+              "fiber-optic",
+              "dark fibre"
+            ]
+          }
+        ]
+      },
+      "sort_order": 3
+    },
+    {
+      "name": "🌐 Full-waveform Inversion & Adjoint Tomography",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Full-waveform inversion & adjoint tomography"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "full-waveform inversion",
+              "full waveform inversion",
+              "FWI",
+              "adjoint tomography",
+              "adjoint method",
+              "waveform inversion"
+            ]
+          }
+        ]
+      },
+      "sort_order": 4
+    },
+    {
+      "name": "🖥️ Numerical Simulation & Wave Propagation",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Numerical wave propagation & HPC"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "spectral element",
+              "SPECFEM",
+              "finite difference seismic",
+              "numerical wave propagation",
+              "seismic wavefield simulation",
+              "wave propagation modeling",
+              "GPU seismic",
+              "HPC seismic"
+            ]
+          }
+        ]
+      },
+      "sort_order": 5
+    },
+    {
+      "name": "🗂️ Earthquake Catalogs & Detection",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Earthquake detection, location & catalogs"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "earthquake catalog",
+              "phase picking",
+              "phase association",
+              "template matching",
+              "earthquake detection",
+              "earthquake location",
+              "deep-learning phase picker",
+              "PhaseNet",
+              "EQTransformer"
+            ]
+          }
+        ]
+      },
+      "sort_order": 6
+    },
+    {
+      "name": "⚡ Earthquake Source & Fault Mechanics",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Earthquake source & rupture dynamics",
+              "Fault mechanics & slow earthquakes"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "rupture dynamics",
+              "stress drop",
+              "source mechanism",
+              "focal mechanism",
+              "earthquake nucleation",
+              "fault mechanics",
+              "slow slip",
+              "slow earthquake",
+              "tremor",
+              "seismicity",
+              "aftershock",
+              "foreshock"
+            ]
+          }
+        ]
+      },
+      "sort_order": 7
+    },
+    {
+      "name": "🧊 Environmental Seismology (cryo/volcano/ocean)",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Volcano, cryosphere, environmental & planetary seismology"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "glacial earthquake",
+              "cryoseismology",
+              "icequake",
+              "glacier seismology",
+              "iceberg",
+              "volcano seismology",
+              "volcanic tremor",
+              "ocean-bottom seismometer",
+              "OBS",
+              "submarine earthquake",
+              "environmental seismology"
+            ]
+          }
+        ]
+      },
+      "sort_order": 8
+    },
+    {
+      "name": "🤖 Machine Learning in Seismology",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Machine learning in seismology"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "machine learning",
+              "deep learning",
+              "neural network",
+              "convolutional",
+              "transformer",
+              "self-supervised",
+              "foundation model"
+            ]
+          }
+        ]
+      },
+      "sort_order": 9
+    },
+    {
+      "name": "📡 Ambient Noise & Interferometry",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "cos_topic",
+            "any_of": [
+              "Ambient-noise seismology & interferometry"
+            ]
+          },
+          {
+            "type": "keyword",
+            "any_of": [
+              "ambient noise",
+              "noise cross-correlation",
+              "seismic interferometry",
+              "ambient-noise tomography",
+              "Green's function retrieval"
+            ]
+          }
+        ]
+      },
+      "sort_order": 10
+    },
+    {
+      "name": "📚 Core Seismology Journals",
+      "type": "topic_monitor",
+      "config": {
+        "match": "any",
+        "predicates": [
+          {
+            "type": "journal",
+            "any_of": [
+              "GJI",
+              "SRL",
+              "JGR-SE",
+              "EPSL",
+              "TECTONOPHYS",
+              "SEISMICA",
+              "BSSA",
+              "SOLID EARTH",
+              "EQ SCI",
+              "GRL"
+            ]
+          }
+        ]
+      },
+      "sort_order": 11
+    }
+  ]
+}

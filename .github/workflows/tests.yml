@@ -1,0 +1,29 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run the offline test suite
+        env:
+          DISABLE_TRACKER_SCHEDULER: "1"
+          DISABLE_EAGER_ANALYSIS: "1"
+          SEISMO_NO_AUTOFETCH: "1"
+          SEISMO_OPEN_BROWSER: "0"
+        run: python -m pytest -q -m "not network"

@@ -1,0 +1,44 @@
+# --- Secrets / 密钥 ---------------------------------------------------------
+.env
+*.env
+!.env.example
+keys.env
+
+# --- Your library: database, PDFs, bundles, exports / 你的文献库数据 ----------
+seismo_hub.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+downloads/
+paper_bundles/
+literature_packs/
+output/
+_db_backup_*/
+_reports/
+
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Editors / OS -------------------------------------------------------------
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# --- Claude Code: keep the shared skills, ignore local state ------------------
+.claude/*
+!.claude/skills/

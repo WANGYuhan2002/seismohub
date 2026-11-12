@@ -1,0 +1,31 @@
+# Keep the image small and secrets out of it.
+.git/
+.github/
+.claude/
+.env
+*.env
+!.env.example
+keys.env
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Your data lives in volumes, never in the image.
+data/
+downloads/
+paper_bundles/
+literature_packs/
+output/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+docs/
+.DS_Store
+*.swp
