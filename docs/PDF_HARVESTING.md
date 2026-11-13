@@ -10,6 +10,12 @@ hosted AI.
 The same workflow is packaged as an agent skill in
 [`.claude/skills/seismohub-pdf-harvest/`](../.claude/skills/seismohub-pdf-harvest/SKILL.md).
 
+To use the harvester without SeismoHub, see [paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest).
+It is the same engine as a standalone tool for reading lists, with its own agent skill. Its documentation covers
+the channel order, which keys to register
+([KEYS.md](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/docs/KEYS.md)), the measured coverage
+([RESULTS.md](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/docs/RESULTS.md)) and use in other fields.
+
 ---
 
 ## 1. Tools

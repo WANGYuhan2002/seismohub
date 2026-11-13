@@ -315,6 +315,11 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 
 Channels, keys, licence tiers and reports are described in [docs/PDF_HARVESTING.md](docs/PDF_HARVESTING.md).
 
+The harvester also runs on its own, without SeismoHub:
+[paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest) uses the same engine for any reading list
+(DOIs, arXiv IDs, citations, `.bib` exports), sorts browser and Zotero downloads by licence, and documents which keys
+to register, the measured coverage and the limits.
+
 ### Agent skill
 
 The repository ships a [Claude Code](https://claude.com/claude-code) skill at
@@ -354,6 +359,7 @@ Report security issues as described in [SECURITY.md](SECURITY.md).
 | Full-text PDF harvesting | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) |
 | Adapting SeismoHub to another field | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) |
 | Agent skill for PDF harvesting | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
+| Standalone PDF harvester (same engine, no SeismoHub needed) | [paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest) | [README_zh.md](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/README_zh.md) |
 
 ## Project layout
 

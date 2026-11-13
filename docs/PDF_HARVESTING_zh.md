@@ -8,6 +8,12 @@ SeismoHub 可以为文献库里的论文、或任意一份阅读清单抓取全�
 
 同一套流程也打包成了 Agent 技能：[`.claude/skills/seismohub-pdf-harvest/`](../.claude/skills/seismohub-pdf-harvest/SKILL.md)。
 
+不用 SeismoHub 也想用这个抓取器，见 [paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest)
+（[中文说明](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/README_zh.md)）。它是同一个引擎做成的独立
+阅读清单工具，自带 Agent 技能。文档写明了渠道顺序、要注册哪些密钥
+（[KEYS_zh.md](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/docs/KEYS_zh.md)）、实测覆盖率
+（[RESULTS_zh.md](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/docs/RESULTS_zh.md)），以及如何用到其他学科。
+
 ---
 
 ## 1. 工具

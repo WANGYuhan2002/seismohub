@@ -281,6 +281,10 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 
 渠道、密钥、许可层级和运行报告的说明见 [docs/PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md)。
 
+抓取器也可以脱离 SeismoHub 单独使用：[paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest)
+用同一个引擎处理任意阅读清单（DOI、arXiv ID、引文、`.bib` 导出文件），把浏览器和 Zotero 下载的 PDF 按许可分流，
+并写明要注册哪些密钥、实测覆盖率和局限（[中文说明](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/README_zh.md)）。
+
 ### Agent 技能
 
 仓库自带一个 [Claude Code](https://claude.com/claude-code) 技能：
@@ -314,6 +318,7 @@ python scripts/harvest_literature_list.py --input-file reading_list.txt --out-di
 | 全文 PDF 抓取 | [PDF_HARVESTING_zh.md](docs/PDF_HARVESTING_zh.md) | [PDF_HARVESTING.md](docs/PDF_HARVESTING.md) |
 | 把 SeismoHub 迁移到其他学科 | [ADAPTING_TO_OTHER_FIELDS_zh.md](docs/ADAPTING_TO_OTHER_FIELDS_zh.md) | [ADAPTING_TO_OTHER_FIELDS.md](docs/ADAPTING_TO_OTHER_FIELDS.md) |
 | PDF 抓取的 Agent 技能 | [SKILL.md](.claude/skills/seismohub-pdf-harvest/SKILL.md) | |
+| 独立的 PDF 抓取工具（同一引擎，不需要 SeismoHub） | [paper-pdf-harvest（中文）](https://github.com/WANGYuhan2002/paper-pdf-harvest/blob/main/README_zh.md) | [paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest) |
 
 ## 目录结构
 

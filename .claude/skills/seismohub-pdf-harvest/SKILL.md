@@ -15,6 +15,10 @@ description: >-
 Work from the repository root with the project's Python environment active. The full user guide is
 `docs/PDF_HARVESTING.md` (Chinese: `docs/PDF_HARVESTING_zh.md`).
 
+Without a SeismoHub library, for example when the user only has a reading list and no checkout, use the standalone
+tool built on the same engine: [paper-pdf-harvest](https://github.com/WANGYuhan2002/paper-pdf-harvest). It ships
+its own skill (`.claude/skills/paper-pdf-harvest/`) under the same ground rules.
+
 ## Ground rules (non-negotiable)
 
 1. **Licensed full text never leaves the machine, and you are a hosted AI.** Do not open, read, extract or summarise
