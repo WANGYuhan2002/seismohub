@@ -163,7 +163,7 @@ flowchart TB
 | Scope and minimum relevance | *group* (0.55) · *personal* (0.25) · or your own value |
 | Folders | automatic by month, or by institution › author; your own folders in collections |
 | Filters on the paper stream | topic · journal · institution (multi-select) · PDF: has PDF / needs upload · date: last 7 days, last 30 days, all time, custom · liked only · starred only · keyword search |
-| Sorting | relevance (similarity to the tracker, then AI relevance) · published date · author · title · journal · last opened · your own order in collections |
+| Sorting | relevance (similarity to the tracker, then AI relevance) · published date · journal impact factor (highest first; preprints and open platforms last) · author · title · journal · last opened · your own order in collections |
 | Starting set | 11 preset seismology trackers under **Add from template**; edit `seed_presets.json` to ship your own |
 
 ## SeismoHub and SeismoHub Lite

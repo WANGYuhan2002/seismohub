@@ -36,6 +36,8 @@ from services.sort_keys import (
     author_sort_key, title_initial_key, journal_sort_key,
     _neg_date, _neg_year, _neg_updated, _neg_added, _neg_last_opened, _position,
 )
+# "Journal IF" sort: SeismoHub Lite's impact-factor table and venue groups.
+from services.journal_impact import impact_factor_sort_key
 from services.analyze_service import (
     _normalize_figure_analyses,
     analyze_paper_from_pdf,
@@ -858,6 +860,7 @@ SORT_KEYS = frozenset({
     "author",                # PR-34: first-author family name A-Z (pinyin for CJK)
     "title_initial",         # PR-34: first non-article word A-Z
     "journal",               # PR-34: canonical journal name A-Z
+    "impact_factor",         # journal impact factor DESC, preprints last (services/journal_impact.py)
     "year",                  # PR-33: publication year DESC
     "added_to_project_at",   # PR-33: ProjectPaper.created_at DESC
     "last_opened",           # PR-33: Paper.last_opened_at DESC
@@ -942,6 +945,8 @@ def _sort_papers(
         "author":              lambda p: (author_sort_key(p.get("authors") or []), _neg_date(p), title_initial_key(p.get("title") or ""), p["id"]),
         "title_initial":       lambda p: (title_initial_key(p.get("title") or ""), author_sort_key(p.get("authors") or []), _neg_date(p), p["id"]),
         "journal":             lambda p: (journal_sort_key(p.get("journal") or ""), _neg_date(p), author_sort_key(p.get("authors") or []), p["id"]),
+        # (group, -IF, journal key, newest first, id): IF listed > other journals > preprints & open platforms.
+        "impact_factor":       impact_factor_sort_key,
         "year":                lambda p: (_neg_year(p), -int(p.get("relevance_score") or 0), author_sort_key(p.get("authors") or []), p["id"]),
         "added_to_project_at": lambda p: (_neg_added(p, project_paper_index), _neg_date(p), p["id"]),
         "last_opened":         lambda p: (_neg_last_opened(p), _neg_date(p), p["id"]),

@@ -789,6 +789,7 @@
         <select id="sortFilter" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500">
           <option value="relevance">Relevance</option>
           <option value="published_date">Published Date</option>
+          <option value="impact_factor" title="Journal impact factor, high to low; preprints and open platforms last · 期刊影响因子从高到低；预印本与开放平台排在最后">Journal IF</option>
         </select>
       </label>
       <div class="flex items-end">
@@ -8195,6 +8196,9 @@
 
     sortFilter.addEventListener("change", async event => {
       state.filters.sortBy = event.target.value;
+      // A dropdown pick always starts in the order's own direction; a reverse
+      // toggled earlier from a column header must not carry over.
+      state.filters.sortReverse = false;
       await loadPapers();
     });
 
