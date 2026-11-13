@@ -25,9 +25,10 @@ green-OA / public-domain discovery):
   9. Institutional & Preprint Green-OA resolvers (strict bidirectional title >=0.80 + author surname):
      - HAL Open Archive (`api.archives-ouvertes.fr/search/`)
      - GFZ Potsdam PubMan (`gfzpublic.gfz.de/rest/items/search` PUBLIC PDFs)
-     - Semantic Scholar `openAccessPdf` + generic DSpace 7 / `citation_pdf_url` landing extractor
      - DataCite Meta-Resolver (`api.datacite.org/dois` covering Zenodo preprints, EarthArXiv,
-       arXiv, ETH RC, KITopen, BORIS Unibe, and university DSpace repositories).
+       arXiv, ETH RC, KITopen, BORIS Unibe, and university DSpace repositories), with a generic
+       DSpace 7 / `citation_pdf_url` landing-page extractor.
+     - Semantic Scholar `openAccessPdf` (`resolve_s2_open_copy`): kept, but not wired into the candidate list.
 """
 from __future__ import annotations
 
@@ -793,7 +794,10 @@ def resolve_s2_open_copy(
     title_overlap_fn: Callable[[str, str], float],
     walled_hosts: Iterable[str] = (),
 ) -> Tuple[str, str, str]:
-    """Check Semantic Scholar Graph API for an unlinked ArXiv ID or institutional green-OA repository PDF."""
+    """Check Semantic Scholar Graph API for an unlinked ArXiv ID or institutional green-OA repository PDF.
+
+    Not wired into the candidate list: the `s2_oa` channel name was dropped on 2026-11-13 (27 attempts in the
+    2026-11-10 runs, no copy found)."""
     clean_doi = (doi or "").strip()
     if not clean_doi:
         return "", "", "no_doi"

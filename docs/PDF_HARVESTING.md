@@ -58,7 +58,8 @@ chmod 600 ~/.config/seismo_harvester/keys.env
 | `SEISMO_HARVEST_KEYS_FILE` | Another keys file to read |
 | `SEISMO_HARVEST_MAX_BYTES` | Size cap per download (default 80 MB; the upgrade layer raises it to 160 MB) |
 
-The harvester prints which keys it found (`keys: wiley=yes elsevier=no`), never their values.
+The harvester prints which keys it found (`keys: wiley=yes elsevier=no openalex=yes`), never their values. An empty
+line such as `WILEY_TDM_TOKEN=` in `.env` counts as unset, so it does not hide the value in a keys file.
 
 ---
 
@@ -81,7 +82,7 @@ The harvester builds an ordered candidate list per paper and stops at the first 
 
 `scripts/seismohub_upgrade_runner.py` is loaded automatically by both harvest CLIs and adds more open channels:
 PMC open-access (official S3 dataset), Springer link PDFs, Research Square, ESSOAr → published-version mapping,
-OSTI, USGS Publications Warehouse, GFZ, HAL, Semantic Scholar open-access PDFs and DataCite repository lookups.
+OSTI, USGS Publications Warehouse, GFZ, HAL and DataCite repository lookups.
 
 Choose channels with `--channels openalex,arxiv,eartharxiv` (comma list).
 

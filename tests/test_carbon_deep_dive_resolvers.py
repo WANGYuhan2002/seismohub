@@ -5,8 +5,9 @@
 - Smart Zenodo main-manuscript selection over larger supplement PDFs
 - Multi-author surname Gate-4 verification for edited preprint titles (with strict >=3 co-author guard)
 - ESSOAr (`10.22541/essoar.*`) -> published journal VoR resolution & TDM compliance
-- OSTI.gov, USGS Pubs, HAL, GFZ PubMan, Semantic Scholar DSpace7, and DataCite resolvers
+- OSTI.gov resolver (through the ESSOAr mapping) and the ETH RC handle / bitstream resolver
 - OpenAlex API key isolation (never leaked into URLs or sent to list/search endpoints)
+- No dead names: no `s2_oa` channel (dropped 2026-11-13), and the module docstrings name only resolvers that exist
 """
 from __future__ import annotations
 
@@ -235,3 +236,23 @@ def test_audit_fixes_reject_egu_abstract_readme_pdf_disallowed_ethrc_and_email_u
     assert backfill.get("doi") == "10.3929/ethz-c-000802564"
     assert not any("/server/api/discover" in c[0] or "/server/api/core/items" in c[0] for c in http_eth.calls)
 
+
+
+def test_semantic_scholar_is_not_a_registered_channel(tmp_path, monkeypatch):
+    """`s2_oa` was registered, but no candidate ever called `resolve_s2_open_copy`; the name was dropped 2026-11-13."""
+    monkeypatch.setattr(fb, "DEFAULT_KEYS_FILE", tmp_path / "none.env")
+    ur.install_harvester_upgrades(fb, cache_path=tmp_path / "cache.sqlite", readonly=True)
+    assert "s2_oa" not in fb.ALL_CHANNELS
+    with pytest.raises(ValueError, match="unknown channel"):
+        fb.FullBundleHarvester(FakeRouteHttp({}), channels=["s2_oa"])
+
+
+def test_module_docstrings_name_only_resolvers_that_exist():
+    """The PMC module once documented a `resolve_arxiv_by_exact_title` that was never written."""
+    import re
+    import sys
+
+    pmc = sys.modules[ur.MetadataFallbackCache.__module__]
+    for module in (pmc, dv, ur):
+        for name in re.findall(r"`(resolve_\w+)`", module.__doc__ or ""):
+            assert hasattr(pmc, name) or hasattr(dv, name), f"{module.__name__} documents a missing {name}"

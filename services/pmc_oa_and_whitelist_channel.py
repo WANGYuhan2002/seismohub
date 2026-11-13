@@ -21,9 +21,6 @@ Fixes applied from the 2026-11-09 cross-session audit (`方法_PDF抓取流程�
 5. Added `resolve_crossref_tdm_pdf_link` (§3.4) to harvest direct PDF links registered in Crossref
    `link[]` (`intended-application: text-mining` / `syndication`) on non-walled hosts such as
    *Seismica* (`seismica.library.mcgill.ca`).
-6. Added `resolve_arxiv_by_exact_title` to rescue unlinked arXiv preprints (`export.arxiv.org`)
-   for Cloudflare-walled GJI / BSSA / SRL / AGU papers using strict bidirectional title matching
-   (`title_overlap >= 0.85`).
 """
 from __future__ import annotations
 

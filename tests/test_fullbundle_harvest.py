@@ -406,6 +406,62 @@ def test_load_harvest_keys_never_overrides_environment(tmp_path, monkeypatch):
     assert "OTHER" not in os.environ  # only the known key names are imported
 
 
+def test_load_harvest_keys_treats_an_empty_variable_as_unset(tmp_path, monkeypatch):
+    """A 'WILEY_TDM_TOKEN=' line copied into .env (python-dotenv sets "") must not shadow keys.env (2026-11-13)."""
+    import os
+    keys = tmp_path / "keys.env"
+    keys.write_text('export WILEY_TDM_TOKEN="from-file"\n')
+    monkeypatch.setenv("WILEY_TDM_TOKEN", "")
+    monkeypatch.setenv("ELSEVIER_API_KEY", "  ")
+    monkeypatch.setenv("SEISMO_HARVEST_KEYS_FILE", str(keys))
+    assert fb.load_harvest_keys() == {"WILEY_TDM_TOKEN": True, "ELSEVIER_API_KEY": False}
+    assert os.environ["WILEY_TDM_TOKEN"] == "from-file"
+    assert "ELSEVIER_API_KEY" not in os.environ  # blank and in no keys file: unset, not "  "
+
+
+def _unset_until_teardown(monkeypatch, *names):
+    """Unset variables so that teardown also removes what the test sets (load_harvest_keys writes os.environ
+    directly, and monkeypatch.delenv of a variable that is absent records nothing to undo)."""
+    for name in names:
+        monkeypatch.setenv(name, "placeholder")
+        monkeypatch.delenv(name)
+
+
+def test_keys_file_can_carry_the_openalex_key(tmp_path, monkeypatch):
+    """harvest_pdfs.py --keys-file: an OPENALEX_API_KEY given only there is loaded (2026-11-13). The upgrade layer
+    adds that key name, so it is installed before the keys are read; before, it re-read only the default files."""
+    import os
+    _unset_until_teardown(monkeypatch, "OPENALEX_API_KEY", "WILEY_TDM_TOKEN", "ELSEVIER_API_KEY")
+    monkeypatch.setattr(fb, "KEY_NAMES", ("WILEY_TDM_TOKEN", "ELSEVIER_API_KEY", "ELSEVIER_INSTTOKEN"))  # as shipped
+    keys = tmp_path / "extra_keys.env"
+    keys.write_text('export OPENALEX_API_KEY="oa-from-keys-file"\nexport WILEY_TDM_TOKEN="w-from-keys-file"\n')
+    fb.load_harvest_keys([str(keys)])  # the old order: keys first, then the upgrade layer adds the key name
+    assert "OPENALEX_API_KEY" not in os.environ
+    cli = _load_cli()
+    present = cli.install_upgrades_and_load_keys(fb, keys_file=str(keys), cache_path=tmp_path / "cache.sqlite",
+                                                 readonly=True)
+    assert present == {"WILEY_TDM_TOKEN": True, "ELSEVIER_API_KEY": False}
+    assert os.environ["OPENALEX_API_KEY"] == "oa-from-keys-file"
+    assert not (tmp_path / "cache.sqlite").exists()  # --dry-run reaches the upgrade layer: no cache file is written
+
+
+def test_keys_file_comes_before_the_default_keys_file(tmp_path, monkeypatch):
+    """--keys-file wins over ~/.config/seismo_harvester/keys.env for every key (load_harvest_keys order), also when
+    the upgrade layer, which reads the key files itself, is installed first."""
+    import os
+    _unset_until_teardown(monkeypatch, "OPENALEX_API_KEY", "WILEY_TDM_TOKEN", "ELSEVIER_API_KEY")
+    default = tmp_path / "default_keys.env"
+    default.write_text('export WILEY_TDM_TOKEN="w-default"\nexport OPENALEX_API_KEY="oa-default"\n'
+                       'export ELSEVIER_API_KEY="e-default"\n')
+    monkeypatch.setattr(fb, "DEFAULT_KEYS_FILE", default)
+    extra = tmp_path / "extra_keys.env"
+    extra.write_text('export WILEY_TDM_TOKEN="w-extra"\nexport OPENALEX_API_KEY="oa-extra"\n')
+    _load_cli().install_upgrades_and_load_keys(fb, keys_file=str(extra), cache_path=tmp_path / "cache.sqlite",
+                                               readonly=True)
+    assert (os.environ["WILEY_TDM_TOKEN"], os.environ["OPENALEX_API_KEY"], os.environ["ELSEVIER_API_KEY"]) == (
+        "w-extra", "oa-extra", "e-default")
+
+
 # ---------------------------------------------------------------- DB attach / CLI
 
 @pytest.fixture()

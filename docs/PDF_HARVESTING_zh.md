@@ -55,7 +55,8 @@ chmod 600 ~/.config/seismo_harvester/keys.env
 | `SEISMO_HARVEST_KEYS_FILE` | 另一个要读取的密钥文件 |
 | `SEISMO_HARVEST_MAX_BYTES` | 单次下载大小上限（默认 80 MB；升级层会提高到 160 MB） |
 
-抓取器只打印找到了哪些密钥（`keys: wiley=yes elsevier=no`），从不打印密钥的值。
+抓取器只打印找到了哪些密钥（`keys: wiley=yes elsevier=no openalex=yes`），从不打印密钥的值。`.env` 里
+`WILEY_TDM_TOKEN=` 这样的空行按未设置处理，不会盖住密钥文件里的值。
 
 ---
 
@@ -77,8 +78,8 @@ chmod 600 ~/.config/seismo_harvester/keys.env
 | `elsevier` | 设置了 `ELSEVIER_API_KEY` 时的 `10.1016` | 开放获取 PDF 在任何网络下都能拿到。订阅文章：API 只给 1 页预览 PDF；全文 XML 只在有权限的网络下提供 |
 
 两个抓取命令都会自动加载 `scripts/seismohub_upgrade_runner.py`，它补充了更多开放渠道：PMC 开放获取（官方 S3 数据集）、
-Springer 链接 PDF、Research Square、ESSOAr 预印本 → 正式版映射、OSTI、USGS 出版物库、GFZ、HAL、Semantic Scholar
-开放获取 PDF，以及 DataCite 仓储查询。
+Springer 链接 PDF、Research Square、ESSOAr 预印本 → 正式版映射、OSTI、USGS 出版物库、GFZ、HAL，以及 DataCite
+仓储查询。
 
 用 `--channels openalex,arxiv,eartharxiv`（逗号分隔）指定渠道。
 

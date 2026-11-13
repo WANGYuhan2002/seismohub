@@ -27,9 +27,11 @@ Upgrades in v2.3 (building on v2.2):
    - `usgs_pubs`: USGS Publications Warehouse public-domain document PDFs.
    - `gfz_repo`: GFZ Potsdam PubMan PUBLIC repository PDFs (`gfzpublic.gfz.de`).
    - `hal_api`: French HAL Open Archive by `halId`, `doi`, or strict Title+Author (`api.archives-ouvertes.fr`).
-   - `s2_oa`: Semantic Scholar Graph API `ArXiv` / `openAccessPdf` + generic DSpace 7 / `citation_pdf_url` extractor.
    - `datacite_repo`: DataCite Meta-Resolver across global preprint & university repositories (Zenodo,
-     EarthArXiv, arXiv, ETH RC, KITopen, BORIS Unibe, etc.) with strict Title (>=0.80) + Author verification.
+     EarthArXiv, arXiv, ETH RC, KITopen, BORIS Unibe, etc.) with strict Title (>=0.80) + Author verification,
+     and a generic DSpace 7 / `citation_pdf_url` landing-page extractor.
+   - Semantic Scholar is not a channel: the `s2_oa` name was dropped on 2026-11-13. No candidate called its
+     resolver (`resolve_s2_open_copy`, kept unwired), and its 27 attempts in the 2026-11-10 runs found no copy.
 3. Zero Key Leakage & Quota Protection:
    - `OPENALEX_API_KEY` is sent ONLY to `content.openalex.org` and free singleton `/works/doi:` calls
      (never to paid list/search endpoints), and stripped from all `HttpResult` URLs, logs, DB rows, and manifests.
@@ -161,17 +163,21 @@ def install_harvester_upgrades(
     cache_path: Optional[Path] = None,
     *,
     readonly: Optional[bool] = None,
+    keys_files: Iterable[Any] = (),
 ) -> MetadataFallbackCache:
-    """Apply v2.3 Wave 1 + Wave 2 channel, resolver, and compliance upgrades to `services.fullbundle_harvest`."""
+    """Apply v2.3 Wave 1 + Wave 2 channel, resolver, and compliance upgrades to `services.fullbundle_harvest`.
+
+    `keys_files` are extra key files (e.g. `harvest_pdfs.py --keys-file`), read in `load_harvest_keys` order."""
     if readonly is None:
         readonly = "--dry-run" in sys.argv
     meta_cache = MetadataFallbackCache(cache_path, readonly=readonly)
 
-    # 0. Allow load_harvest_keys to load OPENALEX_API_KEY from ~/.config/seismo_harvester/keys.env
+    # 0. Allow load_harvest_keys to load OPENALEX_API_KEY: from $SEISMO_HARVEST_KEYS_FILE, then `keys_files`, then
+    #    ~/.config/seismo_harvester/keys.env (without `keys_files` an OPENALEX_API_KEY given only there was never read)
     if hasattr(fb_module, "KEY_NAMES") and "OPENALEX_API_KEY" not in fb_module.KEY_NAMES:
         fb_module.KEY_NAMES = tuple(list(fb_module.KEY_NAMES) + ["OPENALEX_API_KEY"])
     try:
-        fb_module.load_harvest_keys()
+        fb_module.load_harvest_keys(list(keys_files))
     except Exception:
         pass
 
@@ -213,7 +219,6 @@ def install_harvester_upgrades(
         "usgs_pubs",
         "gfz_repo",
         "hal_api",
-        "s2_oa",
         "datacite_repo",
         "crossref_preprint",
         "green_oa_cascade",

@@ -149,8 +149,13 @@ def load_harvest_keys(extra_files: Sequence[os.PathLike] = ()) -> Dict[str, bool
 
     Search order: ``$SEISMO_HARVEST_KEYS_FILE``, ``extra_files``, ``~/.config/seismo_harvester/keys.env``.
     Keys live OUTSIDE the project folder on purpose: the folder (with its ``.env``) is shared with the group.
+    An empty variable counts as unset: a ``WILEY_TDM_TOKEN=`` line copied into ``.env`` (python-dotenv sets "")
+    must not shadow the real value in a keys file.
     Returns which keys are available - never the values.
     """
+    for name in KEY_NAMES:
+        if name in os.environ and not os.environ[name].strip():
+            del os.environ[name]
     paths: List[Path] = []
     env_file = (os.environ.get("SEISMO_HARVEST_KEYS_FILE") or "").strip()
     if env_file:

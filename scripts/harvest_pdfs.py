@@ -135,6 +135,20 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
+def install_upgrades_and_load_keys(fb, *, keys_file: str, cache_path: Path, readonly: bool) -> Dict[str, bool]:
+    """Install the upgrade layer and read the keys, ``--keys-file`` included. Returns which keys are set.
+
+    The upgrade layer adds OPENALEX_API_KEY to ``fb.KEY_NAMES`` and reads the key files again; it must get
+    ``--keys-file`` too, or an OPENALEX_API_KEY given only there is never loaded. Every key then follows the
+    ``load_harvest_keys`` order: ``$SEISMO_HARVEST_KEYS_FILE``, ``--keys-file``, ``~/.config/seismo_harvester/keys.env``.
+    """
+    from scripts.seismohub_upgrade_runner import install_harvester_upgrades
+
+    extra = [keys_file] if keys_file else []
+    install_harvester_upgrades(fb, cache_path=cache_path, readonly=readonly, keys_files=extra)
+    return fb.load_harvest_keys(extra)
+
+
 def backup_db(db_path: Path, ts: str) -> Path:
     """Consistent copy via the SQLite online-backup API (safe while the app is running)."""
     out_dir = db_path.parent / f"_db_backup_{ts}_pre_pdf_harvest_run"
@@ -255,14 +269,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not db_path.is_file():
         print(f"DB not found: {db_path}", file=sys.stderr)
         return 2
-    keys = fb.load_harvest_keys([args.keys_file] if args.keys_file else [])
     bundle_root = Path(args.bundle_root).expanduser() if args.bundle_root else REPO / "paper_bundles"
-    from scripts.seismohub_upgrade_runner import install_harvester_upgrades
-    install_harvester_upgrades(fb, cache_path=bundle_root / "_metadata_cache.sqlite")
+    keys = install_upgrades_and_load_keys(fb, keys_file=args.keys_file,
+                                          cache_path=bundle_root / "_metadata_cache.sqlite", readonly=args.dry_run)
     channels = [c.strip() for c in args.channels.split(",") if c.strip()] or None
     harvester = fb.FullBundleHarvester(channels=channels, attach_tdm=False,  # sealed 2026-11-09
                                        download_code=args.download_code)
-    bundle_root = Path(args.bundle_root).expanduser() if args.bundle_root else REPO / "paper_bundles"
     downloads_dir = Path(args.downloads_dir).expanduser() if args.downloads_dir else pdf_naming.DOWNLOADS_DIR
 
     refs = select_papers(db, Paper, fb, args)
@@ -270,7 +282,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"SeismoHub Full-Bundle harvester {fb.HARVEST_VERSION} | {mode}")
     print(f"  DB: {db_path}")
     print(f"  keys: wiley={'yes' if keys['WILEY_TDM_TOKEN'] else 'no'} "
-          f"elsevier={'yes' if keys['ELSEVIER_API_KEY'] else 'no'} | channels: {','.join(sorted(harvester.channels))}")
+          f"elsevier={'yes' if keys['ELSEVIER_API_KEY'] else 'no'} "
+          f"openalex={'yes' if os.environ.get('OPENALEX_API_KEY') else 'no'} "
+          f"| channels: {','.join(sorted(harvester.channels))}")
     print("  attach TDM-licensed copies to the app: no (bundle only; --attach-tdm sealed 2026-11-09)")
     print(f"  papers selected: {len(refs)}")
     if not refs:
