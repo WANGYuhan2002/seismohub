@@ -189,13 +189,16 @@ How Lite is cut out of the heavy library:
   analyses.
 - It leaves out PDFs and their paths, embeddings, reading state, notes, projects, the chat, verbatim figure captions,
   and papers classified as off-topic.
-- Only analyses made from abstracts and metadata are published, never ones made from a PDF, so no full text is
-  republished.
+- Nothing from an analysis made from a PDF is published, so no full text is republished. When a paper is analysed
+  again from its PDF, Lite keeps the AI note and tags (topics, keywords, facets, relevance) that it already showed,
+  which were made from the abstract. A paper analysed from its PDF before Lite first showed it appears with its
+  metadata and abstract only.
 - The output is static JSON (the list, the abstracts, and per-paper analyses in shards) plus one HTML file. Search and
   filters run in the reader's browser; the site has no server, no AI and no API key.
-- A daily job publishes only when every check passes: a new successful fetch, no AI analysis made from a PDF
-  anywhere in the library, an unchanged data layout, limits on size and string length (so full text cannot slip in), a headless-browser test of the page, and a privacy scan that
-  compares the files against the real key values. If any check fails, that day is skipped.
+- A daily job publishes only when every check passes: a new successful fetch; nothing made from a PDF in the export;
+  an unchanged data layout; limits on size and string length, so full text cannot slip in; a headless-browser test of
+  the page; and a privacy scan that compares the files against the real key values. If any check fails, that day is
+  skipped.
 
 ---
 
